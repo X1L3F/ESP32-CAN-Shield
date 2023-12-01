@@ -1,0 +1,13 @@
+# Old versions from KiCad
+*-backups
+# BOM temporary files
+*.csv
+*.xml
+# Local project settings
+*.kicad_prl
+# Save/Restore Layout logs
+*.log
+# KiCad lock files
+*.lck
+# KiCad ERC
+*.rpt
