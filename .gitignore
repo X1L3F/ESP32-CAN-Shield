@@ -11,3 +11,5 @@
 *.lck
 # KiCad ERC
 *.rpt
+# KiCad FP cache
+CAN-Shield/fp-info-cache
