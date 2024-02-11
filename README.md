@@ -4,11 +4,13 @@
 
 This ESP32-CAN-Shield is a custom-designed shield for the ESP32-S3, primarily used as a CAN (Controller Area Network) to Wi-Fi bridge. It enables seamless integration and communication between CAN network systems and Wi-Fi networks, making it ideal for automotive and industrial applications where remote monitoring and control are necessary.
 
+![plot](overview.png)
+
 ## Compatibility
 
 **Note:** ESP32 development boards come in various widths. Ensure to adjust the header width of this shield to match your specific ESP32 board model.
 
-## Hardware Design
+## Hardware
 
 The shield features a robust CAN transceiver schematic, including an optional termination resistor for network integrity.
 
@@ -22,6 +24,44 @@ The shield features a robust CAN transceiver schematic, including an optional te
 - **Protection:** Incorporates a PESD2CAN diode in a small SOT23 SMD package, designed to protect the CAN lines from ESD and other transient damages. This ensures reliability and longevity in automotive environments.
 - **Manufacturing Compatibility:** Designed in accordance with JLC Design Rules for easy custom manufacturing.
 
-## Upcoming Features
+## Software
 
-While the current focus is on the hardware design, future updates will introduce software components to further enhance the capabilities of the ESP32-CAN-Shield.
+The software is structured into two components:
+
+- The Gateway runs on the ESP and serves as the translater of CAN to caneth/caneth to CAN messages. It also serves a Website where different settings like CAN-speed and remote IP can be changed.
+- The connector which runs on a PC and sends/receives caneth Messages to the Gateway. It basically connects Busmaster or any other tool.
+
+### Installation
+
+#### Gateway
+
+The Gateway is developed with PlatformIO it can be installed as VScode [extension](https://marketplace.visualstudio.com/items?itemName=platformio.platformio-ide). When the Gateway folder is opened in VScode, PlatformIO is automatically initalized and the project can be compiled and uploaded to the ESP. Make sure to add a `Gateway/include/Secrets.h` file with the wifi credentials.
+
+```
+#ifndef SECRETS_H
+#define SECRETS_H
+
+#define WIFI_SSID "your-SSID"
+#define WIFI_PASSWORD "your-PW"
+
+#endif
+```
+
+#### Connector
+
+The Connector is a python script with no external dependencies.
+
+#### Simulation
+
+To simulate a device that sends/receives CAN-messages to the Bus either CANoe or a python script found in `Tools/canDevice.py` is used with a Vector VN1610. To use it follow this steps:
+
+- install the `pip install python-can` package
+- install the [latest drivers](https://www.vector.com/int/en/support-downloads/download-center/#product=%5B%2256540%22%5D&downloadType=%5B%22drivers%22%5D&tab=1&pageSize=30&sort=date&order=desc) for the Vector hardware Interface
+- install the [XL Driver Library](https://www.vector.com/int/en/support-downloads/download-center/#product=%5B%22175%22%5D&downloadType=%5B%22drivers%22%5D&tab=1&pageSize=15&sort=date&order=desc) and copy the `vxlapi64.dll` into the working directory
+
+### Usage
+
+1. Attach CAN-Shield to ESP32 connect it to PC with the right USB-port and flash the Gateway-software
+2. Plug in IDC and connect to VN1610. Connect VN1610 to PC.
+3. Start `Connector/connector.py`, the UDP traffic can also be analyzed with Wireshark by filtering for `caneth`
+4. Start CANoe or `Tools/canDevice.py`
