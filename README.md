@@ -63,5 +63,6 @@ To simulate a device that sends/receives CAN-messages to the Bus either CANoe or
 
 1. Attach CAN-Shield to ESP32 connect it to PC with the right USB-port and flash the Gateway-software
 2. Plug in IDC and connect to VN1610. Connect VN1610 to PC.
-3. Start `Connector/connector.py`, the UDP traffic can also be analyzed with Wireshark by filtering for `caneth`
-4. Start CANoe or `Tools/canDevice.py`
+3. Go to the settings website of the ESP by entering it's ip in a browser. And configure CAN-speed and IP of the Connector host.
+4. Start `Connector/connector.py`, the UDP traffic can also be analyzed with Wireshark by filtering for `caneth`
+5. Start CANoe or `Tools/canDevice.py`
