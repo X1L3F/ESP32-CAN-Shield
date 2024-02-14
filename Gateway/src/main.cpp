@@ -28,6 +28,7 @@ void setup()
     Serial.print(".");
   }
   Serial.println("Connected to WiFi");
+  Serial.println(WiFi.localIP());
 
   canController.start(TWAI_TIMING_CONFIG_500KBITS());
   udpCommunicator.begin();

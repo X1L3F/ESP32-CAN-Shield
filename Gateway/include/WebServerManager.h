@@ -17,6 +17,8 @@ private:
     UdpCommunicator &udpCommunicator;
 
     void handleUpdate(AsyncWebServerRequest *request);
+    void handleApplyFilter(AsyncWebServerRequest *request);
+    
     String getHtmlContent();
 };
 

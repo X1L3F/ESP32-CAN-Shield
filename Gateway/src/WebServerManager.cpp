@@ -3,20 +3,30 @@
 WebServerManager::WebServerManager(CanController &canCtrl, UdpCommunicator &udpComm)
     : server(80), canController(canCtrl), udpCommunicator(udpComm) {}
 
-void WebServerManager::begin()
-{
-    server.on("/", HTTP_GET, [this](AsyncWebServerRequest *request)
-              { request->send(200, "text/html", getHtmlContent()); });
+void WebServerManager::begin() {
+    server.on("/", HTTP_GET, [this](AsyncWebServerRequest *request) {
+        request->send(200, "text/html", getHtmlContent());
+    });
 
-    server.on("/update", HTTP_POST, [this](AsyncWebServerRequest *request)
-              { this->handleUpdate(request); });
+    server.on("/update", HTTP_POST, [this](AsyncWebServerRequest *request) {
+        this->handleUpdate(request);
+    });
+
+    server.on("/applyFilter", HTTP_POST, [this](AsyncWebServerRequest *request) {
+        this->handleApplyFilter(request);
+    });
+
+    server.on("/restart", HTTP_GET, [this](AsyncWebServerRequest *request) {
+        request->send(200, "text/html", "ESP Neugestartet!<br><a href='/'>Go Back</a>");
+        delay(1000); // Kurze Verzögerung
+        ESP.restart();
+    });
 
     server.begin();
 }
 
-String WebServerManager::getHtmlContent()
-{
-    const char *htmlContent = R"(
+String WebServerManager::getHtmlContent() {
+    return R"(
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,10 +52,24 @@ String WebServerManager::getHtmlContent()
         </select>
         <input type="submit" value="Update Settings">
     </form>
+    <br>
+    <form action="/applyFilter" method="post">
+        <label for="canIdFilter">CAN ID Filter:</label>
+        <input type="text" id="canIdFilter" name="canIdFilter" placeholder="0x123">
+        <label for="filterType">Filter Type:</label>
+        <select name="filterType" id="filterType">
+            <option value="include">Include</option>
+            <option value="exclude">Exclude</option>
+        </select>
+        <input type="submit" value="Apply Filter">
+    </form>
+    <br>
+    <form action="/restart" method="get">
+        <input type="submit" value="Neustart">
+    </form>
 </body>
 </html>
     )";
-    return String(htmlContent);
 }
 
 void WebServerManager::handleUpdate(AsyncWebServerRequest *request)
@@ -107,5 +131,19 @@ void WebServerManager::handleUpdate(AsyncWebServerRequest *request)
     else
     {
         request->send(400, "text/html", "Missing information!<br><a href='/'>Try Again</a>");
+    }
+}
+
+void WebServerManager::handleApplyFilter(AsyncWebServerRequest *request) {
+    if (request->hasParam("canIdFilter", true) && request->hasParam("filterType", true)) {
+        String canIdFilter = request->getParam("canIdFilter", true)->value();
+        String filterType = request->getParam("filterType", true)->value();
+        
+        // Hier solltest du die Logik implementieren, um den Filter auf die CAN-Nachrichten anzuwenden
+        // Beispiel: applyCanFilter(canIdFilter, filterType);
+
+        request->send(200, "text/html", "Filter applied!<br><a href='/'>Go Back</a>");
+    } else {
+        request->send(400, "text/html", "Missing information for filter application!<br><a href='/'>Try Again</a>");
     }
 }
