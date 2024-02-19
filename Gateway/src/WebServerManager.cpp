@@ -33,6 +33,56 @@ String WebServerManager::getHtmlContent() {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CAN Configuration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+        }
+        form {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        label {
+            margin-top: 10px;
+            display: block;
+            color: #666;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+        }
+        input[type="submit"] {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
     <h1>CAN Configuration</h1>
@@ -52,14 +102,12 @@ String WebServerManager::getHtmlContent() {
         </select>
         <input type="submit" value="Update Settings">
     </form>
-    <br>
     <form action="/applyFilter" method="post">
         <label for="canIdFilter">CAN ID Filter:</label>
         <input type="text" id="canIdFilter" name="canIdFilter" placeholder="0x123">
         <input type="submit" name="filterAction" value="Enable Filter">
         <input type="submit" name="filterAction" value="Disable Filter">
     </form>
-    <br>
     <form action="/restart" method="get">
         <input type="submit" value="Neustart">
     </form>
@@ -67,6 +115,7 @@ String WebServerManager::getHtmlContent() {
 </html>
     )";
 }
+
 
 void WebServerManager::handleUpdate(AsyncWebServerRequest *request)
 {
