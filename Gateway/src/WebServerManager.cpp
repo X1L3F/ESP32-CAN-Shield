@@ -33,6 +33,56 @@ String WebServerManager::getHtmlContent() {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CAN Configuration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+        }
+        form {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        label {
+            margin-top: 10px;
+            display: block;
+            color: #666;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+        }
+        input[type="submit"] {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
     <h1>CAN Configuration</h1>
@@ -43,7 +93,7 @@ String WebServerManager::getHtmlContent() {
         <select name="canBitRate" id="canBitRate">
             <option value="1MBITS">1 Mbit/s</option>
             <option value="800KBITS">800 Kbit/s</option>
-            <option value="500KBITS">500 Kbit/s</option>
+            <option value="500KBITS" selected>500 Kbit/s</option>
             <option value="250KBITS">250 Kbit/s</option>
             <option value="125KBITS">125 Kbit/s</option>
             <option value="100KBITS">100 Kbit/s</option>
@@ -52,18 +102,12 @@ String WebServerManager::getHtmlContent() {
         </select>
         <input type="submit" value="Update Settings">
     </form>
-    <br>
     <form action="/applyFilter" method="post">
         <label for="canIdFilter">CAN ID Filter:</label>
         <input type="text" id="canIdFilter" name="canIdFilter" placeholder="0x123">
-        <label for="filterType">Filter Type:</label>
-        <select name="filterType" id="filterType">
-            <option value="include">Include</option>
-            <option value="exclude">Exclude</option>
-        </select>
-        <input type="submit" value="Apply Filter">
+        <input type="submit" name="filterAction" value="Enable Filter">
+        <input type="submit" name="filterAction" value="Disable Filter">
     </form>
-    <br>
     <form action="/restart" method="get">
         <input type="submit" value="Neustart">
     </form>
@@ -71,6 +115,7 @@ String WebServerManager::getHtmlContent() {
 </html>
     )";
 }
+
 
 void WebServerManager::handleUpdate(AsyncWebServerRequest *request)
 {
@@ -135,15 +180,22 @@ void WebServerManager::handleUpdate(AsyncWebServerRequest *request)
 }
 
 void WebServerManager::handleApplyFilter(AsyncWebServerRequest *request) {
-    if (request->hasParam("canIdFilter", true) && request->hasParam("filterType", true)) {
+    if (request->hasParam("canIdFilter", true)) {
         String canIdFilter = request->getParam("canIdFilter", true)->value();
-        String filterType = request->getParam("filterType", true)->value();
-        
-        // Hier solltest du die Logik implementieren, um den Filter auf die CAN-Nachrichten anzuwenden
-        // Beispiel: applyCanFilter(canIdFilter, filterType);
-
-        request->send(200, "text/html", "Filter applied!<br><a href='/'>Go Back</a>");
-    } else {
-        request->send(400, "text/html", "Missing information for filter application!<br><a href='/'>Try Again</a>");
+        uint32_t canId = strtoul(canIdFilter.c_str(), nullptr, 16); // Umwandlung in eine Zahl
+        udpCommunicator.updateFilterId(canId);
     }
+
+    // Überprüfe, welche Aktion ausgeführt werden soll
+    if (request->hasParam("filterAction", true)) {
+        String action = request->getParam("filterAction", true)->value();
+        if (action == "Enable Filter") {
+            udpCommunicator.setFilterEnabled(true);
+        } else if (action == "Disable Filter") {
+            udpCommunicator.setFilterEnabled(false);
+        }
+    }
+
+    request->send(200, "text/html", "Filter settings updated!<br><a href='/'>Go Back</a>");
 }
+
