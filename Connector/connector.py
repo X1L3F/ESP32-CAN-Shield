@@ -5,7 +5,7 @@ from struct import pack, unpack
 UDP_IP = "0.0.0.0"  # Listen on all interfaces
 SHARED_UDP_PORT = 4210
 #TODO : get Ip from first message
-TARGET_IP = "192.168.42.125"  # Target IP to send messages to and receive messages from
+TARGET_IP = "192.168.0.240"  # Target IP to send messages to and receive messages from
 
 # Setup UDP socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

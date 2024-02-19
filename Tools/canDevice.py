@@ -23,7 +23,7 @@ def listen_and_send(bus, send_interval=5):
         # Non-blocking check for incoming messages
         message = bus.recv(timeout=0)  # Non-blocking
         if message:
-            print(f"Received message: {message}")
+            print(f"Received message: {message}") # message format: Timestamp   sender_can_ID  msg_info    data_length     msg_content     channel_info
 
         # Short sleep to prevent a tight loop that consumes too much CPU
         time.sleep(0.1) 

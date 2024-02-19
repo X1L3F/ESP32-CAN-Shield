@@ -10,7 +10,7 @@
 // WiFi credentials and destination settings
 const char *ssid = WIFI_SSID;
 const char *password = WIFI_PASSWORD;
-IPAddress remoteIp(192, 168, 42, 182);
+IPAddress remoteIp(192, 168, 0, 5); // PC adress
 
 #define POLLING_RATE_MS 100 // Reduced polling rate for more responsive handling
 
@@ -19,7 +19,7 @@ UdpCommunicator udpCommunicator(remoteIp);
 WebServerManager webServerManager(canController, udpCommunicator);
 
 void setup()
-{
+{ 
   Serial.begin(115200);
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED)
@@ -28,6 +28,8 @@ void setup()
     Serial.print(".");
   }
   Serial.println("Connected to WiFi");
+  Serial.println(WiFi.localIP());
+  
 
   canController.start(TWAI_TIMING_CONFIG_500KBITS());
   udpCommunicator.begin();
@@ -56,7 +58,10 @@ void loop()
     }
     else
     {
-      Serial.println("Failed to forward UDP message to CAN\n");
+      Serial.println("Failed to forward UDP message to CAN");
+      Serial.print("ESP IP4 Address: ");
+      Serial.println(WiFi.localIP());
+      Serial.print("\n");
     }
   }
 
