@@ -61,14 +61,14 @@ def loop():
         except socket.timeout:
             pass  # No data received, just continue
 
-        # Send a CANETH message every 5 seconds
-        if time.time() - last_send_time >= 5:
-            can_id = 0x123
-            can_data = b'\x01\x02\x03\x04\x05\x06\x07\x08'
-            message = encode_caneth_message(can_id, can_data)
-            sock.sendto(message, (TARGET_IP, SHARED_UDP_PORT))
-            last_send_time = time.time()
-            print("Sent CANETH message")
+        # # Send a CANETH message every 5 seconds
+        # if time.time() - last_send_time >= 5:
+        #     can_id = 0x123
+        #     can_data = b'\x01\x02\x03\x04\x05\x06\x07\x08'
+        #     message = encode_caneth_message(can_id, can_data)
+        #     sock.sendto(message, (TARGET_IP, SHARED_UDP_PORT))
+        #     last_send_time = time.time()
+        #     print("Sent CANETH message")
 
 if __name__ == "__main__":
     loop()
