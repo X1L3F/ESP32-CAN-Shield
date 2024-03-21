@@ -15,14 +15,14 @@ def encode_caneth_message(can_id_hex, data_hex, ext_flag=False, rtr_flag=False):
 
     # Ensure the CAN data is 8 bytes long
     data_padded = data_hex.ljust(8, b'\x00')
-        
+
     # Creating the message buffer with the specified structure
     message = pack('8sBB', magic_id, protocol_version, frame_count)
     message += pack('I', can_id_hex)
     message += pack('B', len(data_hex))
     message += data_padded[:8]  # Ensure only the first 8 bytes are included
     message += pack('BB', ext_flag, rtr_flag)
-        
+
     return message
 
 #*********************************************************************************************************
@@ -45,7 +45,7 @@ def decode_caneth_message(message):
     data = message[15:15+data_length]
     # Unpack flags
     ext_flag, rtr_flag = unpack('BB', message[23:25])
-    
+
     # Create a dictionary with the decoded message components
     decoded_message = {
         "ID": can_id,
@@ -55,7 +55,7 @@ def decode_caneth_message(message):
     }
     # Print the decoded message
     #print(f"Received CANETH Message: ID={can_id}, Data={data[:8]}, Ext={bool(ext_flag)}, RTR={bool(rtr_flag)}")
-    
+
     return decoded_message
 # Test status: successfull tested
 
@@ -81,24 +81,28 @@ def convert_to_binary_string(input_string):
 class connector:
     def __init__(self):
 
-        self.target_IP = "192.168.0.240" # Target IP to send messages to and receive messages from
-        self.UDP_IP = "0.0.0.0"  # Listen on all interfaces
-        self.shared_UDP_port = 4210
-        self.recieve_flag = True
+        self.target_IP = "192.168.0.240"  # Target IP to send messages to and from.
+        self.UDP_IP = "0.0.0.0"  # Listen on all network interfaces.
+        self.shared_UDP_port = 4210  # Designated UDP port for communication.
+        self.recieve_flag = True  # Flag to control message receiving.
+        self.whitelist_enabled = False  # Flag to enable whitelist filtering.
+        self.blacklist_enabled = False  # Flag to enable blacklist filtering.
+        self.whitelist_IPs = set()  # Set of whitelisted IP addresses.
+        self.blacklist_IPs = set()  # Set of blacklisted IP addresses.
 
         # setup UDP socket with default values
         self.update_UDP_socket(self.UDP_IP)
-    
+        self.enable_blacklist_IPv4_address()
+
     def update_UDP_socket(self, input_UDP_IP):
         # FUNC: updating the UDP socket with the new UDP_IP the connector should listen
         # INPUT: input_UDP_IP as string;     e.g.: "0.0.0.0"
         # RETURN: ---
         self.UDP_IP = input_UDP_IP
-
         # updating UDP socket
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind((self.UDP_IP, self.shared_UDP_port))
-    
+
     def updated_target_IP(self, input_target_IP):
         # FUNC: updating the target IP
         # INPUT: ininput_target_IP as string;     e.g.: "192.168.0.240"
@@ -110,37 +114,43 @@ class connector:
         # INPUT:    input_can_id_hex as hex-number;     e.g.: 0x123
         #           input_can_data_hex as byte-string;  e.g.: b'\x01\x02\x03\x04\x05\xFH\xFG\xFF'
         # RETURN: ---
-
         encoded_message = encode_caneth_message(input_can_id_hex, input_can_data_hex)
         self.sock.sendto(encoded_message, (self.target_IP, self.shared_UDP_port))
     # Test status: successfull tested
-    
+
     def recieve_message(self):
         # FUNC: recieving a caneth message and decoding it
         # INPUT: ---
         # RETURN: message
-        
-        return_flag = 0
+
+        return_flag = -1 
         return_message = None
 
         if True == self.recieve_flag:
             self.sock.settimeout(1.0)  # Set timeout to 1 second for non-blocking receive
+
             try:
-                rec_data, addr = self.sock.recvfrom(2048)
-                if addr[0] == self.target_IP:  # Check if the message is from the target IP
+                rec_data, addr = self.sock.recvfrom(2048)  # Attempt to receive data.
+                if self.blacklist_enabled and addr[0] in self.blacklist_IPs:
+                    # Message is from a blacklisted IP.
+                    print(f"Blocked message from blacklisted IP {addr[0]}")
+                    return_flag = 0  # Special flag indicating blocked message.
+                elif not self.whitelist_enabled or addr[0] in self.whitelist_IPs:
+                    # blacklist enabled or message is allowed through whitelist filter.
                     decoded_message = decode_caneth_message(rec_data)
                     return_message = decoded_message
-                    return_flag = 1
+                    return_flag = 1  # Flag indicating successful message reception.
                 else:
-                    print(f"Ignored message from {addr[0]}")
-                    return_flag = 2
+                    # message is from a non-whitelisted IP when whitelist is enabled.
+                    print(f"Ignored message from non-whitelisted IP {addr[0]}")
+                    return_flag = 2  # Flag indicating message ignored.
             except socket.timeout:
-                return_flag = 0
-                pass  # No data received, just continue
+                # No data received within timeout period.
+                pass
 
         return return_flag, return_message
     # Test status: successfull tested
-    
+
     def toggle_recieving_message(self, input_rec_flag):
         # FUNC: toggeling to recieve messages on and off
         # INPUT: input_rec_falg as boolean
@@ -151,12 +161,45 @@ class connector:
         elif False == self.recieve_flag:
             print("Recieving messages diabeld")
     # Test status: successfull tested
-    
-    def filter_add_IPv4_adress(self):
-        pass
 
-    def filter_remove_IPv4_adress(self):
-        pass
+    def enable_whitelist_IPv4_address(self):
+        # FUNC: enables or disables whitelist filtering for IPv4 adresses 
+        # INPUT: ---
+        # RETURN: ---
+        self.whitelist_enabled = True
+        self.blacklist_enabled = False
+
+    def whitelist_add_IPv4_address(self, input_IPv4_address):
+        # FUNC: adds an IPv4 address to the whitelist
+        # INPUT: input_IPv4_address as string; e.g.: "192.168.0.240"
+        # RETURN: ---
+        self.whitelist_IPs.add(input_IPv4_address)
+
+    def whitelist_remove_IPv4_address(self, input_IPv4_address):
+        # FUNC: removes an IPv4 address from the whitelist
+        # INPUT: input_IPv4_address as string
+        # RETURN: ---
+        self.whitelist_IPs.discard(input_IPv4_address)
+
+    def enable_blacklist_IPv4_address(self):
+        # FUNC: enables blacklist filtering for IPv4 adresses 
+        # INPUT: ---
+        # RETURN: ---
+        self.whitelist_enabled = False
+        self.blacklist_enabled = True
+        
+
+    def blacklist_add_IPv4_address(self, input_IPv4_address):
+        # FUNC: adds an IPv4 address to the blacklist
+        # INPUT: input_IPv4_address as string
+        # RETURN: ---
+        self.blacklist_IPs.add(input_IPv4_address)
+    
+    def blacklist_remove_IPv4_address(self, input_IPv4_address):
+        # FUNC: removes an IPv4 address from the blacklist
+        # INPUT: input_IPv4_address as string
+        # RETURN: ---
+        self.blacklist_IPs.discard(input_IPv4_address)
 
 #*********************************************************************************************************
 def loop():
@@ -169,16 +212,19 @@ def loop():
         if 1 == message_flag: # printing recieved message information
             print("Received CANETH Message: ", "ID:", dict_message["ID"], "\tData:", dict_message["Data"], "\tExt:", dict_message["Ext"], "\tRTR:", dict_message["RTR"] )
         elif 0 == message_flag:
-            print("No message received.")
-            time.sleep(0.1)
+            print("Recieved message's IPv4 adress is blacklisted")
         elif 2 == message_flag:
-            print("target id not valid")
+            print("Recieved message's IPv4 adress is not whitlisted")
+        elif -1 == message_flag:
+            print("No message recieved")
+            time.sleep(0.1)
         else:
-            print("message falg invalid.")
+            print("message flag invalid.")
 
         # Send a CANETH message every 5 seconds
         if time.time() - last_send_time >= 2:
             
+            print("TEST: ", test_num, " *********************************************************************")
             # Testing differen sent messages from the connector_class to the canDevice via ESP32
             if 0 == test_num:
                 # testing:  input data size greater than a hexadecimal byte
@@ -222,12 +268,42 @@ def loop():
                 my_connector.toggle_recieving_message(False)
             elif 8 == test_num:
                 # testing_  enabeling recieving messages
-                # expected: enabeld recieving messages and print statement:
+                # expected: enabeld recieving messages and print statement: "Recieving messages enabled"
                 # result:   passed
                 my_connector.toggle_recieving_message(True)
+            elif 9 == test_num:
+                # testing_  enabeling empty whitelist
+                # expected: recieved message's IPv4 adress is not whitlisted; message_flag =2
+                # result:   passed
+                my_connector.enable_whitelist_IPv4_address()
+            elif 10 == test_num:
+                # testing_  adding a valid IPv4 adress to the whitelist
+                # expected: recieved message's IPv4 adress is not whitlisted; message_flag =1
+                # result:   passed
+                my_connector.whitelist_add_IPv4_address("192.168.0.240")
+            elif 11 == test_num:
+                # testing_  removing a valid IPv4 adress from the whitelist
+                # expected: recieved message's IPv4 adress is not whitlisted; message_flag =2
+                # result:   passed
+                my_connector.whitelist_remove_IPv4_address("192.168.0.240")
+            elif 12 == test_num:
+                # testing_  enabeling empty blacklist
+                # expected: recieved message's IPv4 adress is not blacklisted, message_flag =1
+                # result:   FAILD
+                my_connector.enable_blacklist_IPv4_address()
+            elif 13 == test_num:
+                # testing_  adding valid IPv4 adress to blacklist
+                # expected: recieved message's IPv4 adress is blacklisted, message_flag =0
+                # result:   passed
+                my_connector.blacklist_add_IPv4_address("192.168.0.240")
+            elif 14 == test_num:
+                # testing_  removing valid IPv4 adress from blacklist
+                # expected: recieved message's IPv4 adress is not blacklisted, message_flag =1
+                # result:   passed
+                my_connector.blacklist_remove_IPv4_address("192.168.0.240")
             else:
                 break
-            
+
             test_num+=1
 
             # sending test message

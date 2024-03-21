@@ -1,7 +1,7 @@
 import can
 import time
 
-def listen_and_send(bus, send_interval=5):
+def listen_and_send(bus, send_interval=1):
     """
     Listens for incoming messages and sends a message every 'send_interval' seconds.
     """
