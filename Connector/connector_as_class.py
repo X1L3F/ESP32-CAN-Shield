@@ -191,7 +191,6 @@ class Connector:
         self.whitelist_enabled = False
         self.blacklist_enabled = True
         
-
     def blacklist_add_IPv4_address(self, input_IPv4_address):
         # FUNC: adds an IPv4 address to the blacklist
         # INPUT: input_IPv4_address as string
@@ -218,23 +217,44 @@ class MessageLogger:
         self.exact_message_count = exact_message_count  # Exact number of messages to be stored
         self.exact_messages = deque(maxlen=exact_message_count) if exact_message_count else []  # Exact messages deque
 
+        self.whitelist_enabled = False
+        self.blacklist_enabled = True
+        self.whitelist_IDs = set()  # Set of whitelisted IP addresses.
+        self.blacklist_IDs = set()  # Set of blacklisted IP addresses.
+
     def log_recent_message(self, message_flag, message):
-        # FUNC: Log a recent message
-        # INPUT: message (dict): The message to be logged
-        # RETURN: ---
-        #print("LOG recent: ", "ID:", message["ID"], "\tData:", message["Data"], "\tExt:", message["Ext"], "\tRTR:", message["RTR"] )
+        # Funktion: Protokollieren einer kürzlich empfangenen Nachricht
+        # Eingabe:    message_flag (int): Wenn 1, dann Nachricht von gültiger IPv4-Adresse
+        #            message (dict): Die zu protokollierende Nachricht
+        # Rückgabe: ---
         if 1 == message_flag:
-            self.recent_messages.append(message)  # Append the message to the recent messages deque
+            if self.blacklist_enabled and message["ID"] in self.blacklist_IDs:
+                print("Message from blacklisted ID")
+                return
+            if (not self.whitelist_enabled) or (self.whitelist_enabled and message["ID"] in self.whitelist_IDs):
+                self.recent_messages.append(message)
+            else:
+                print("Message not from an whitelisted ID")
         else:
             pass
 
     def log_exact_message(self, message_flag, message):
-        # FUNC: Log a exact message
-        # INPUT: message (dict): The message to be logged
-        # RETURN: ---
-        #print("LOG Exact: ", "ID:", message["ID"], "\tData:", message["Data"], "\tExt:", message["Ext"], "\tRTR:", message["RTR"] )
+        # Funktion: Protokollieren einer exakten Nachricht
+        # Eingabe:    message_flag (int): Wenn 1, dann Nachricht von gültiger IPv4-Adresse
+        #            message (dict): Die zu protokollierende Nachricht
+        # Rückgabe: ---
+        if len(self.exact_messages) >= self.exact_message_count:
+            print("Speicher für exakte Nachrichten ist voll. Nachricht nicht protokolliert.")
+            return
+
         if 1 == message_flag:
-            self.exact_messages.append(message)  # Append the message to the exact messages deque
+            if self.blacklist_enabled and message["ID"] in self.blacklist_IDs:
+                print("Message from blacklisted ID")
+                return
+            if (not self.whitelist_enabled) or (self.whitelist_enabled and message["ID"] in self.whitelist_IDs):
+                self.recent_messages.append(message)
+            else:
+                print("Message not from an whitelisted ID")
         else:
             pass
 
@@ -275,6 +295,44 @@ class MessageLogger:
         # INPUT:  ---
         # RETURN: deque: Deque containing all exact messages
         return self.exact_messages
+    
+    def enable_whitelist_msgID(self):
+        # FUNC: enables or disables whitelist filtering for ID
+        # INPUT: ---
+        # RETURN: ---
+        self.whitelist_enabled = True
+        self.blacklist_enabled = False
+
+    def whitelist_add_msgID(self, input_msgID):
+        # FUNC: adds an ID to the whitelist
+        # INPUT: input_msgID as int
+        # RETURN: ---
+        self.whitelist_IDs.add(input_msgID)
+
+    def whitelist_remove_msgID(self, input_msgID):
+        # FUNC: removes an ID from the whitelist
+        # INPUT: input_msgID as int
+        # RETURN: ---
+        self.whitelist_IDs.discard(input_msgID)
+
+    def enable_blacklist_msgID(self):
+        # FUNC: enables blacklist filtering for ID 
+        # INPUT: ---
+        # RETURN: ---
+        self.whitelist_enabled = False
+        self.blacklist_enabled = True        
+
+    def blacklist_add_msgID(self, input_msgID):
+        # FUNC: adds an ID to the blacklist
+        # INPUT: input_msgID as int
+        # RETURN: ---
+        self.blacklist_IDs.add(input_msgID)
+    
+    def blacklist_remove_msgID(self, input_msgID):
+        # FUNC: removes an ID from the blacklist
+        # INPUT: input_msgID as int
+        # RETURN: ---
+        self.blacklist_IDs.discard(input_msgID)
 
 #*********************************************************************************************************
 def loop():
@@ -394,8 +452,9 @@ def loop():
                 print("Sent CANETH message")
 
             
-        # Testing the MessageLogger class
+        # Testing the MessageLogger class #  Attention to the speed of incoming messages !!!
         if True:
+            print("TEST: ", test_num, " *********************************************************************")
             if 0 == test_num:
                     # testing:  updating the recent message count
                     # expected: exact message count updated to 5
@@ -407,17 +466,38 @@ def loop():
                     # result:   passed
                 my_msg_logger.update_exact_message_count(8)
 
-                # testing:  adding a message to the recent message memory
-                # expected: when printed: last 5 messages displayed
+            if 2== test_num:
+                # testing_  enableing msgID whitelist 
+                # expected: recieved message's ID is not whitelisted, message wont be saved
                 # result:   passed
-            my_msg_logger.log_recent_message(message_flag, dict_message)
-
-                # testing:  adding a message to the exact message memory
-                # expected: when printed: first 8 messages displayed
+                my_msg_logger.enable_whitelist_msgID()
+            elif 3 == test_num:
+                # testing_  adding vaild ID to whitelist 
+                # expected: recieved message's ID is whitelisted, message will be saved
                 # result:   passed
-            my_msg_logger.log_exact_message(message_flag, dict_message)
+                my_msg_logger.whitelist_add_msgID(69)
+            elif 4 == test_num:
+                # testing_  adding vaild ID to whitelist 
+                # expected: recieved message's ID is not whitelisted, message will not be saved
+                # result:   passed
+                my_msg_logger.whitelist_remove_msgID(69)
+            elif 5 == test_num:
+                # testing_  enabeling msgID blacklist 
+                # expected: recieved message's ID is not blacklisted, message will be saved
+                # result:   passed
+                my_msg_logger.enable_blacklist_msgID()
+            elif 6 == test_num:
+                # testing_  adding valid msgID to blacklist 
+                # expected: recieved message's ID is blacklisted, message will not be saved
+                # result:   passed
+                my_msg_logger.blacklist_add_msgID(69)
+            elif 7 == test_num:
+                # testing_  removing valid msgID to blacklist 
+                # expected: recieved message's ID is not blacklisted, message will be saved
+                # result:   passed
+                my_msg_logger.blacklist_remove_msgID(69)
 
-            if 15 == test_num:
+            if 20 == test_num:
                 # print all recent messages
                 print("Recent Messages:")
                 for message in my_msg_logger.get_recent_messages():
@@ -430,7 +510,17 @@ def loop():
                 
                 break
 
-            test_num += 1
+                # testing:  adding a message to the recent message memory
+                # expected: when printed: last 5 messages displayed
+                # result:   passed
+            my_msg_logger.log_recent_message(message_flag, dict_message)
+
+                # testing:  adding a message to the exact message memory
+                # expected: when printed: first 8 messages displayed
+                # result:   passed
+            my_msg_logger.log_exact_message(message_flag, dict_message)
+
+            test_num = test_num
 
 #*********************************************************************************************************
 if __name__ == "__main__":
