@@ -25,7 +25,7 @@ void setup()
   
   // Optional: Setzen einer festen IP-Adresse für den AP
   IPAddress local_IP(192,168,4,1);
-  IPAddress gateway(192,168,4,9);
+  IPAddress gateway(192,168,4,1);
   IPAddress subnet(255,255,255,0);
   WiFi.softAPConfig(local_IP, gateway, subnet);
 
