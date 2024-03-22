@@ -12,8 +12,32 @@ void UdpCommunicator::updateRemoteIp(const IPAddress &newRemoteIp)
   _remoteIp = newRemoteIp;
 }
 
+void UdpCommunicator::updateFilterId(uint32_t newFilterId) {
+    _filterId = newFilterId;
+    Serial.print("Filtering for CAN ID: 0x");
+    Serial.println(_filterId, HEX);
+}
+
+void UdpCommunicator::setFilterEnabled(bool enabled) {
+    _filterEnabled = enabled;
+    Serial.print("Filtering ");
+    Serial.println(enabled ? "enabled" : "disabled");
+}
+
+
+bool UdpCommunicator::shouldSendMessage(uint32_t id) {
+    // Wenn Filterung aktiv ist, prüfe die CAN-ID
+    if (_filterEnabled) {
+        return id == _filterId;
+    }
+    return true; // Wenn keine Filterung aktiv ist, sende alle Nachrichten
+}
+
 void UdpCommunicator::send(uint32_t id, const uint8_t *data, uint8_t length, bool extFlag, bool rtrFlag)
 {
+  if (!shouldSendMessage(id)) {
+    return; // Nicht senden, wenn die ID gefiltert wird
+  }
   uint8_t buffer[25];
   int messageLength = encodeCanEthMessage(id, data, length, extFlag, rtrFlag, buffer);
   _udp.beginPacket(_remoteIp, 4210);

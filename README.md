@@ -35,14 +35,14 @@ The software is structured into two components:
 
 #### Gateway
 
-The Gateway is developed with PlatformIO it can be installed as VScode [extension](https://marketplace.visualstudio.com/items?itemName=platformio.platformio-ide). When the Gateway folder is opened in VScode, PlatformIO is automatically initalized and the project can be compiled and uploaded to the ESP. Make sure to add a `Gateway/include/Secrets.h` file with the wifi credentials.
+The Gateway is developed with PlatformIO it can be installed as VScode [extension](https://marketplace.visualstudio.com/items?itemName=platformio.platformio-ide). When the Gateway folder is opened in VScode, PlatformIO is automatically initalized and the project can be compiled and uploaded to the ESP. Make sure to add a `Gateway/include/Secrets.h` file with the desired WIFI configuration.
 
 ```
 #ifndef SECRETS_H
 #define SECRETS_H
 
-#define WIFI_SSID "your-SSID"
-#define WIFI_PASSWORD "your-PW"
+#define WIFI_SSID "ESP32_CAN_Shield"
+#define WIFI_PASSWORD "choose-your-own-Password"
 
 #endif
 ```

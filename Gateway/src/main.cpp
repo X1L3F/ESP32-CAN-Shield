@@ -21,6 +21,7 @@ WebServerManager webServerManager(canController, udpCommunicator);
 void setup()
 { 
   Serial.begin(115200);
+
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED)
   {
@@ -29,7 +30,6 @@ void setup()
   }
   Serial.println("Connected to WiFi");
   Serial.println(WiFi.localIP());
-  
 
   canController.start(TWAI_TIMING_CONFIG_500KBITS());
   udpCommunicator.begin();
