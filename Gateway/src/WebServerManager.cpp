@@ -198,4 +198,3 @@ void WebServerManager::handleApplyFilter(AsyncWebServerRequest *request) {
 
     request->send(200, "text/html", "Filter settings updated!<br><a href='/'>Go Back</a>");
 }
-
