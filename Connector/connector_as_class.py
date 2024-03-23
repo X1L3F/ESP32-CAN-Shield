@@ -94,14 +94,16 @@ class Connector:
         self.blacklist_IPs = set()  # Set of blacklisted IP addresses.
 
         # setup UDP socket with default values
-        self.update_UDP_socket(self.UDP_IP)
+        self.update_UDP_socket(self.UDP_IP, self.shared_UDP_port)
         self.enable_blacklist_IPv4_address()
 
-    def update_UDP_socket(self, input_UDP_IP):
+    def update_UDP_socket(self, input_UDP_IP, input_shared_UDP_port):
         # FUNC: updating the UDP socket with the new UDP_IP the connector should listen
         # INPUT: input_UDP_IP as string;     e.g.: "0.0.0.0"
+        #        input_shared_UDP_port as int
         # RETURN: ---
         self.UDP_IP = input_UDP_IP
+        self.shared_UDP_port = input_shared_UDP_port
         # updating UDP socket
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind((self.UDP_IP, self.shared_UDP_port))
