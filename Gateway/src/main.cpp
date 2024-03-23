@@ -7,9 +7,16 @@
 #define RX_PIN 4
 #define TX_PIN 5
 
-// WiFi credentials and destination settings
-const char *ssid = WIFI_SSID;
-const char *password = WIFI_PASSWORD;
+// WiFi and Hotspot settings
+//Make sure you adjust the ssid and password in your Secrets.h to your WIFI
+//mode = 1: connection with a predefined WIFI
+//mode = 2: ESP32 as a WLAN-Access-Point
+int mode = 1;
+const char *wifi_ssid = WIFI_SSID;
+const char *wifi_password = WIFI_PASSWORD;
+
+const char *hotspot_ssid = Hotspot_SSID;
+const char *hotspot_password = Hotspot_PASSWORD;
 IPAddress remoteIp(192, 168, 42, 182);
 
 #define POLLING_RATE_MS 100 // Reduced polling rate for more responsive handling
@@ -21,17 +28,33 @@ WebServerManager webServerManager(canController, udpCommunicator);
 void setup()
 {
   Serial.begin(115200);
-  WiFi.softAP(ssid, password);
-  
-  // Optional: Setzen einer festen IP-Adresse für den AP
-  IPAddress local_IP(192,168,4,1);
-  IPAddress gateway(192,168,4,1);
-  IPAddress subnet(255,255,255,0);
-  WiFi.softAPConfig(local_IP, gateway, subnet);
 
-  Serial.println("Access Point gestartet");
-  Serial.print("IP-Adresse: ");
-  Serial.println(WiFi.softAPIP());
+  //
+  //Connection with a predefined WIFI
+  if(mode == 1)
+  {
+    WiFi.begin(wifi_ssid, wifi_password);
+    while (WiFi.status() != WL_CONNECTED)
+    {
+      delay(500);
+      Serial.print(".");
+    }
+    Serial.println("Connected to WiFi");
+    Serial.println(WiFi.localIP());
+  }
+
+  //Using the 
+  if(mode == 2)
+  {
+    WiFi.softAP(hotspot_ssid, hotspot_password);
+    IPAddress local_IP(192,168,4,1);
+    IPAddress gateway(192,168,4,1);
+    IPAddress subnet(255,255,255,0);
+    WiFi.softAPConfig(local_IP, gateway, subnet);
+    Serial.println("Access Point gestartet");
+    Serial.print("IP-Adresse: ");
+    Serial.println(WiFi.softAPIP());
+  }
 
   canController.start(TWAI_TIMING_CONFIG_500KBITS());
   udpCommunicator.begin();
