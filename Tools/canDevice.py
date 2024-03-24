@@ -20,6 +20,8 @@ def listen_and_send(bus, send_interval=1):
                 print(f"Message sent on {bus.channel_info}")
                 last_send_time = current_time  # Update the last send time
                 data_change += 1 # increas number
+                if 256 == data_change:
+                    data_change = 0
             except can.CanError:
                 print("Message NOT sent")
 

@@ -1,5 +1,4 @@
 import socket
-import time
 from struct import pack, unpack
 from collections import deque
 
@@ -25,6 +24,7 @@ def encode_caneth_message(can_id_hex, data_hex, ext_flag=False, rtr_flag=False):
     message += pack('BB', ext_flag, rtr_flag)
 
     return message
+# Test status: successfull tested
 
 #*********************************************************************************************************
 def decode_caneth_message(message):
@@ -37,7 +37,6 @@ def decode_caneth_message(message):
     magic_id, protocol_version, frame_count = unpack('8sBB', message[:10])
     # Verify magic ID
     if magic_id != b'ISO11898':
-        print("Invalid magic identifier")
         return
     # Unpack the CAN ID and data length
     can_id, = unpack('I', message[10:14])
@@ -56,9 +55,6 @@ def decode_caneth_message(message):
         "Ext": bool(ext_flag),
         "RTR": bool(rtr_flag)
     }
-    # Print the decoded message
-    #print(f"Received CANETH Message: ID={can_id}, Data={data[:8]}, Ext={bool(ext_flag)}, RTR={bool(rtr_flag)}")
-
     return decoded_message
 # Test status: successfull tested
 
@@ -67,15 +63,11 @@ def convert_to_binary_string(input_string):
     # FUNC: converting a string to a binary-string
     # INPUT: input_string as string; e.g.: "01 02 03 04 05 FD FE FF"
     # RETURN: binary_string
-
-    print("INPUT: \t", input_string)
     hex_string = input_string.replace(' ', '')  # removing spaces
     if len(hex_string) % 2 != 0:    # catching error due to invalid hex_string length  
         hex_string = hex_string[:-1] + '0' + hex_string[-1]
     hex_string = hex_string[:16]  
-    print("HEX: \t",hex_string)
     binary_string = bytes.fromhex(hex_string)
-    print("BINARY-HEX: \t",binary_string)
 
     return binary_string
 # Test status: successfull tested
@@ -87,7 +79,7 @@ class Connector:
         self.target_IP = "192.168.0.240"  # Target IP to send messages to and from.
         self.UDP_IP = "0.0.0.0"  # Listen on all network interfaces.
         self.shared_UDP_port = 4210  # Designated UDP port for communication.
-        self.recieve_flag = True  # Flag to control message receiving.
+        self.recieve_flag = False  # Flag to control message receiving.
         self.whitelist_enabled = False  # Flag to enable whitelist filtering.
         self.blacklist_enabled = False  # Flag to enable blacklist filtering.
         self.whitelist_IPs = set()  # Set of whitelisted IP addresses.
@@ -137,8 +129,7 @@ class Connector:
             try:
                 rec_data, addr = self.sock.recvfrom(2048)  # attempt to receive data.
                 if self.blacklist_enabled and addr[0] in self.blacklist_IPs:
-                    # Message is from a blacklisted IP.
-                    print(f"Blocked message from blacklisted IP {addr[0]}")
+                    # Message is from a blacklisted IP
                     return_flag = 0  # special flag indicating blocked message.
                 elif not self.whitelist_enabled or addr[0] in self.whitelist_IPs:
                     # blacklist enabled or message is allowed through whitelist filter.
@@ -147,7 +138,6 @@ class Connector:
                     return_flag = 1  # flag indicating successful message reception.
                 else:
                     # message is from a non-whitelisted IP when whitelist is enabled.
-                    print(f"Ignored message from non-whitelisted IP {addr[0]}")
                     return_flag = 2  # flag indicating message ignored.
             except socket.timeout:
                 # no data received within timeout period.
@@ -161,10 +151,6 @@ class Connector:
         # INPUT: input_rec_falg as boolean
         # RETURN: ---
         self.recieve_flag =  input_rec_flag
-        if True == self.recieve_flag:
-            print("Recieving messages enabled")
-        elif False == self.recieve_flag:
-            print("Recieving messages diabeld")
     # Test status: successfull tested
 
     def enable_whitelist_IPv4_address(self):
@@ -186,6 +172,11 @@ class Connector:
         # RETURN: ---
         self.whitelist_IPs.discard(input_IPv4_address)
 
+    def whitelist_clear_IPv4_addresses(self):
+        # FUNC: removes all IPv4 addresses from the whitelist
+        # RETURN: ---
+        self.whitelist_IPs.clear()
+
     def enable_blacklist_IPv4_address(self):
         # FUNC: enables blacklist filtering for IPv4 adresses 
         # INPUT: ---
@@ -204,6 +195,11 @@ class Connector:
         # INPUT: input_IPv4_address as string
         # RETURN: ---
         self.blacklist_IPs.discard(input_IPv4_address)
+
+    def blacklist_clear_IPv4_addresses(self):
+        # FUNC: removes all IPv4 addresses from the blacklist
+        # RETURN: ---
+        self.blacklist_IPs.clear()
 
 #*********************************************************************************************************
 #from collections import deque
@@ -231,12 +227,13 @@ class MessageLogger:
         # Rückgabe: ---
         if 1 == message_flag:
             if self.blacklist_enabled and message["ID"] in self.blacklist_IDs:
-                print("Message from blacklisted ID")
+                # Message from blacklisted ID
                 return
             if (not self.whitelist_enabled) or (self.whitelist_enabled and message["ID"] in self.whitelist_IDs):
                 self.recent_messages.append(message)
             else:
-                print("Message not from an whitelisted ID")
+                # Message not from an whitelisted ID
+                pass
         else:
             pass
 
@@ -246,17 +243,18 @@ class MessageLogger:
         #            message (dict): Die zu protokollierende Nachricht
         # Rückgabe: ---
         if len(self.exact_messages) >= self.exact_message_count:
-            print("Speicher für exakte Nachrichten ist voll. Nachricht nicht protokolliert.")
+            # exact message count limit is exceeded
             return
 
         if 1 == message_flag:
             if self.blacklist_enabled and message["ID"] in self.blacklist_IDs:
-                print("Message from blacklisted ID")
+                # Message from blacklisted ID
                 return
             if (not self.whitelist_enabled) or (self.whitelist_enabled and message["ID"] in self.whitelist_IDs):
-                self.recent_messages.append(message)
+                self.exact_messages.append(message)
             else:
-                print("Message not from an whitelisted ID")
+                # Message not from an whitelisted ID
+                pass
         else:
             pass
 
@@ -316,6 +314,11 @@ class MessageLogger:
         # INPUT: input_msgID as int
         # RETURN: ---
         self.whitelist_IDs.discard(input_msgID)
+    
+    def whitelist_clear_msgIDs(self):
+        # FUNC: removes all IDs from the whitelist
+        # RETURN: ---
+        self.whitelist_IDs.clear()
 
     def enable_blacklist_msgID(self):
         # FUNC: enables blacklist filtering for ID 
@@ -335,195 +338,10 @@ class MessageLogger:
         # INPUT: input_msgID as int
         # RETURN: ---
         self.blacklist_IDs.discard(input_msgID)
+    
+    def blacklist_clear_msgIDs(self):
+        # FUNC: removes all IDs from the blacklist
+        # RETURN: ---
+        self.blacklist_IDs.clear()
 
 #*********************************************************************************************************
-def loop():
-    last_send_time = time.time()
-    my_connector = Connector()
-    my_msg_logger = MessageLogger()
-
-    test_num = 0
-    while True:
-
-        message_flag, dict_message = my_connector.recieve_message()
-
-        if 1 == message_flag: # printing recieved message information
-            print("Received CANETH Message: ", "ID:", dict_message["ID"], "\tData:", dict_message["Data"], "\tExt:", dict_message["Ext"], "\tRTR:", dict_message["RTR"] )
-        elif 0 == message_flag:
-            print("Recieved message's IPv4 adress is blacklisted")
-        elif 2 == message_flag:
-            print("Recieved message's IPv4 adress is not whitlisted")
-        elif -1 == message_flag:
-            print("No message recieved")
-            time.sleep(0.1)
-        else:
-            print("message flag invalid.")
-
-        # Send a CANETH message every 5 seconds
-        if time.time() - last_send_time >= 2:
-            
-            if False:
-                print("TEST: ", test_num, " *********************************************************************")
-                # Testing differen sent messages from the connector_class to the canDevice via ESP32
-                if 0 == test_num:
-                    # testing:  input data size greater than a hexadecimal byte
-                    # expected: sent binary-string is reduced to the size of a hexadecimal byte (first 16 digits)
-                    # result:   passed
-                    test_input = "00 00 00 00 00 00 00 00 00"
-                elif 1 == test_num:
-                    # testing_  input data size smaller than a hexadecimal byte and even number of digits
-                    # expected: sent binary-string is reduced to the input size
-                    # result:   passed
-                    test_input = "00"
-                elif 2 == test_num:
-                    # testing_  input data size smaller than a hexadecimal byte with white space and even number of digits
-                    # expected: sent binary-string is reduced to the input size and equal to input without whitespaces
-                    # result:   passed 
-                    test_input = "01 02 03 04 "
-                elif 3 == test_num:
-                    # testing_  input data size smaller than a hexadecimal byte without white space and even number of digits
-                    # expected: sent binary-string is reduced to the input size and equal to input with whitespaces
-                    # result:   passed 
-                    test_input = "01020304"
-                elif 4 == test_num:
-                    # testing_  input data size smaller than a hexadecimal byte with white space and odd number of digits
-                    # expected: sent binary-string is reduced to the input size with added 0 at the second last digit and equal to input without whitespaces
-                    # result:   passed 
-                    test_input = "01 2"
-                elif 5 == test_num:
-                    # testing_  input data size smaller than a hexadecimal byte with whiteout space and odd number of digits
-                    # expected: sent binary-string is reduced to the input sizew ith added 0 at the second last digit and equal to input with whitespaces
-                    # result:   passed  
-                    test_input = "012"
-                elif 6 == test_num: 
-                    # testing_  input data tested for input value from 00 to FF
-                    # expected: input data passed to binary-string
-                    # result:   passed
-                    test_input = "00 01 02 03 04 FD FE FF"
-                elif 7 == test_num:
-                    # testing_  disabeling recieving messages
-                    # expected: disabeld recieving message and print statement when messag: "recieving messages disabeled"
-                    # result:   passed
-                    my_connector.toggle_recieving_message(False)
-                elif 8 == test_num:
-                    # testing_  enabeling recieving messages
-                    # expected: enabeld recieving messages and print statement: "Recieving messages enabled"
-                    # result:   passed
-                    my_connector.toggle_recieving_message(True)
-                elif 9 == test_num:
-                    # testing_  enabeling empty whitelist
-                    # expected: recieved message's IPv4 adress is not whitlisted; message_flag =2
-                    # result:   passed
-                    my_connector.enable_whitelist_IPv4_address()
-                elif 10 == test_num:
-                    # testing_  adding a valid IPv4 adress to the whitelist
-                    # expected: recieved message's IPv4 adress is not whitlisted; message_flag =1
-                    # result:   passed
-                    my_connector.whitelist_add_IPv4_address("192.168.0.240")
-                elif 11 == test_num:
-                    # testing_  removing a valid IPv4 adress from the whitelist
-                    # expected: recieved message's IPv4 adress is not whitlisted; message_flag =2
-                    # result:   passed
-                    my_connector.whitelist_remove_IPv4_address("192.168.0.240")
-                elif 12 == test_num:
-                    # testing_  enabeling empty blacklist
-                    # expected: recieved message's IPv4 adress is not blacklisted, message_flag =1
-                    # result:   passed
-                    my_connector.enable_blacklist_IPv4_address()
-                elif 13 == test_num:
-                    # testing_  adding valid IPv4 adress to blacklist
-                    # expected: recieved message's IPv4 adress is blacklisted, message_flag =0
-                    # result:   passed
-                    my_connector.blacklist_add_IPv4_address("192.168.0.240")
-                elif 14 == test_num:
-                    # testing_  removing valid IPv4 adress from blacklist
-                    # expected: recieved message's IPv4 adress is not blacklisted, message_flag =1
-                    # result:   passed
-                    my_connector.blacklist_remove_IPv4_address("192.168.0.240")
-                else:
-                    pass
-
-                test_num+=1
-
-                # sending test message
-                binary_string = convert_to_binary_string(test_input)
-                can_id_hex = 0x123
-                my_connector.send_message(can_id_hex, binary_string)
-
-                last_send_time = time.time()
-                print("Sent CANETH message")
-
-            
-        # Testing the MessageLogger class #  Attention to the speed of incoming messages !!!
-        if True:
-            print("TEST: ", test_num, " *********************************************************************")
-            if 0 == test_num:
-                    # testing:  updating the recent message count
-                    # expected: exact message count updated to 5
-                    # result:   passed
-                my_msg_logger.update_max_recent_messages(5)
-            
-                    # testing:  updating the exact message count
-                    # expected: exact message count updated to 8
-                    # result:   passed
-                my_msg_logger.update_exact_message_count(8)
-
-            if 2== test_num:
-                # testing_  enableing msgID whitelist 
-                # expected: recieved message's ID is not whitelisted, message wont be saved
-                # result:   passed
-                my_msg_logger.enable_whitelist_msgID()
-            elif 3 == test_num:
-                # testing_  adding vaild ID to whitelist 
-                # expected: recieved message's ID is whitelisted, message will be saved
-                # result:   passed
-                my_msg_logger.whitelist_add_msgID(69)
-            elif 4 == test_num:
-                # testing_  adding vaild ID to whitelist 
-                # expected: recieved message's ID is not whitelisted, message will not be saved
-                # result:   passed
-                my_msg_logger.whitelist_remove_msgID(69)
-            elif 5 == test_num:
-                # testing_  enabeling msgID blacklist 
-                # expected: recieved message's ID is not blacklisted, message will be saved
-                # result:   passed
-                my_msg_logger.enable_blacklist_msgID()
-            elif 6 == test_num:
-                # testing_  adding valid msgID to blacklist 
-                # expected: recieved message's ID is blacklisted, message will not be saved
-                # result:   passed
-                my_msg_logger.blacklist_add_msgID(69)
-            elif 7 == test_num:
-                # testing_  removing valid msgID to blacklist 
-                # expected: recieved message's ID is not blacklisted, message will be saved
-                # result:   passed
-                my_msg_logger.blacklist_remove_msgID(69)
-
-            if 20 == test_num:
-                # print all recent messages
-                print("Recent Messages:")
-                for message in my_msg_logger.get_recent_messages():
-                    print("Received CANETH Message: ", "ID:", message["ID"], "\tData:", message["Data"], "\tExt:", message["Ext"], "\tRTR:", message["RTR"])
-
-                # print all exact messages
-                print("Exact Messages:")
-                for message in my_msg_logger.get_exact_messages():
-                    print("Received CANETH Message: ", "ID:", message["ID"], "\tData:", message["Data"], "\tExt:", message["Ext"], "\tRTR:", message["RTR"])
-                
-                break
-
-                # testing:  adding a message to the recent message memory
-                # expected: when printed: last 5 messages displayed
-                # result:   passed
-            my_msg_logger.log_recent_message(message_flag, dict_message)
-
-                # testing:  adding a message to the exact message memory
-                # expected: when printed: first 8 messages displayed
-                # result:   passed
-            my_msg_logger.log_exact_message(message_flag, dict_message)
-
-            test_num = test_num
-
-#*********************************************************************************************************
-if __name__ == "__main__":
-    loop()    
