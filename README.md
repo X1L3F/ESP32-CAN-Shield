@@ -28,7 +28,7 @@ The shield features a robust CAN transceiver schematic, including an optional te
 
 The software is structured into two components:
 
-- The Gateway runs on the ESP and serves as the translater of CAN to caneth/caneth to CAN messages. It also serves a Website where different settings like CAN-speed and remote IP can be changed.
+- The Gateway runs on the ESP and serves as the translater of CAN to caneth/caneth to CAN messages. It also serves a Website where different settings like CAN-speed and remote IP can be changed or a CAN-ID filter can be used.
 - The connector which runs on a PC and sends/receives caneth Messages to the Gateway. It basically connects Busmaster or any other tool.
 
 ### Installation
@@ -50,6 +50,21 @@ The Gateway is developed with PlatformIO it can be installed as VScode [extensio
 #define Hotspot_PASSWORD "own-ESP32-Password"
 
 #endif
+```
+
+In the main.cpp of the gateway, the network setting can be modified via the mode variable.
+
+- Mode = 1: The ESP32 connects to a predefined network.
+- Mode = 2: The ESP32 acts as a Wi-Fi Access Point, which one still needs to connect to with a computer.
+
+```
+...
+// WiFi and Hotspot settings
+//Make sure you adjust the ssid and password in your Secrets.h to your WIFI
+//mode = 1: connection with a predefined WIFI
+//mode = 2: ESP32 as a WLAN-Access-Point
+int mode = 1;
+...
 ```
 
 #### Connector
