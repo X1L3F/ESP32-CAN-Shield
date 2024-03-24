@@ -45,7 +45,7 @@ The Gateway is developed with PlatformIO it can be installed as VScode [extensio
 #define WIFI_SSID "own-WIFI-SSID"
 #define WIFI_PASSWORD "own-WIFI-Password"
 
-//Definde the SSID and Password for the hotspot of the ESP32
+//Define the SSID and Password for the hotspot of the ESP32
 #define Hotspot_SSID "own-ESP32-SSID"
 #define Hotspot_PASSWORD "own-ESP32-Password"
 
