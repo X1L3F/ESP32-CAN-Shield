@@ -12,20 +12,72 @@ void WebServerManager::begin() {
         this->handleUpdate(request);
     });
 
-    server.on("/applyFilter", HTTP_POST, [this](AsyncWebServerRequest *request) {
-        this->handleApplyFilter(request);
-    });
-
     server.on("/restart", HTTP_GET, [this](AsyncWebServerRequest *request) {
-        request->send(200, "text/html", "ESP Neugestartet!<br><a href='/'>Go Back</a>");
+        request->send(200, "text/html", "ESP Restarted!<br><a href='/'>Go Back</a>");
         delay(1000); // Kurze Verzögerung
         ESP.restart();
+    });
+
+    server.on("/allowAll", HTTP_GET, [this](AsyncWebServerRequest *request) {
+        udpCommunicator.setAllowAll(true);
+        request->send(200, "text/html", "All messages are allowed, except Blacklist.<br><a href='/'>Go Back</a>");
+    });
+
+    server.on("/blockAll", HTTP_GET, [this](AsyncWebServerRequest *request) {
+        udpCommunicator.setAllowAll(false);
+        request->send(200, "text/html", "Block all messages, except Whitelist.<br><a href='/'>Go Back</a>");
+    });
+
+    server.on("/updateList", HTTP_POST, [this](AsyncWebServerRequest *request) {
+        if (request->hasParam("canId", true) && request->hasParam("listAction", true)) {
+            String canIdStr = request->getParam("canId", true)->value();
+            uint32_t canId = strtoul(canIdStr.c_str(), nullptr, 16); // CAN-ID von String zu uint32_t konvertieren
+            String action = request->getParam("listAction", true)->value();
+            
+            if (action == "Add to Whitelist") {
+                udpCommunicator.addToWhitelist(canId);
+            } else if (action == "Add to Blacklist") {
+                udpCommunicator.addToBlacklist(canId);
+            }
+            
+            request->send(200, "text/html", "List updated!<br><a href='/'>Go Back</a>");
+        } else {
+            request->send(400, "text/html", "Missing information!<br><a href='/'>Go Back</a>");
+        }
+    });
+
+    server.on("/clearList", HTTP_POST, [this](AsyncWebServerRequest *request) {
+        if (request->hasParam("listAction", true)) {
+            String action = request->getParam("listAction", true)->value();
+            
+            if (action == "Delete Whitelist") {
+                udpCommunicator.clearWhitelist();
+            } else if (action == "Delete Blacklist") {
+                udpCommunicator.clearBlacklist();
+            }
+            
+            request->send(200, "text/html", "Deleted List!<br><a href='/'>Go Back</a>");
+        } else {
+            request->send(400, "text/html", "Missing Information!<br><a href='/'>Go Back</a>");
+        }
     });
 
     server.begin();
 }
 
 String WebServerManager::getHtmlContent() {
+    bool allowAll = udpCommunicator.isAllowAllEnabled();
+    String allowAllButtonClass = allowAll ? "button-active" : "button-inactive";
+    String blockAllButtonClass = !allowAll ? "button-active" : "button-inactive";
+    String bitrateOptions[8] = {"1MBITS", "800KBITS", "500KBITS", "250KBITS", "125KBITS", "100KBITS", "50KBITS", "25KBITS"};
+    String optionsHtml = "";
+    for (const String &option : bitrateOptions) {
+        optionsHtml += "<option value=\"" + option + "\"" + (option == currentBitRate ? " selected" : "") + ">" + option + "</option>\n";
+    }
+    String whitelistHtml = udpCommunicator.getWhitelistAsString(); // Angenommen, diese Methode gibt die Whitelist als formatierten HTML-String zurück
+    String blacklistHtml = udpCommunicator.getBlacklistAsString(); // Analog für die Blacklist
+
+
     return R"(
 <!DOCTYPE html>
 <html lang="en">
@@ -55,7 +107,7 @@ String WebServerManager::getHtmlContent() {
             display: block;
             color: #666;
         }
-        input[type="text"], select {
+        input[type="text"], select, .button-group button {
             width: 100%;
             padding: 10px;
             margin-top: 5px;
@@ -64,23 +116,24 @@ String WebServerManager::getHtmlContent() {
             border: 1px solid #ddd;
             box-sizing: border-box;
         }
-        input[type="submit"] {
+        .button-group {
+            display: flex;
+            justify-content: start;
+            gap: 10px; /* Abstand zwischen den Buttons */
+        }
+        .button-group button {
+            flex-grow: 1;
+        }
+        .button-active {
             background-color: #007bff;
             color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
         }
-        input[type="submit"]:hover {
-            background-color: #0056b3;
+        .button-inactive {
+            background-color: #6c757d;
+            color: white;
         }
-        a {
-            color: #007bff;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
+        .button-group button:hover {
+            opacity: 0.8;
         }
     </style>
 </head>
@@ -88,28 +141,37 @@ String WebServerManager::getHtmlContent() {
     <h1>CAN Configuration</h1>
     <form action="/update" method="post">
         <label for="remoteIp">Remote IP:</label>
-        <input type="text" id="remoteIp" name="remoteIp" placeholder="192.168.4.1">
+         <input type="text" id="remoteIp" name="remoteIp" placeholder="192.168.4.1" value=")" + storedRemoteIp + R"(">
         <label for="canBitRate">CAN Bit Rate:</label>
-        <select name="canBitRate" id="canBitRate">
-            <option value="1MBITS">1 Mbit/s</option>
-            <option value="800KBITS">800 Kbit/s</option>
-            <option value="500KBITS" selected>500 Kbit/s</option>
-            <option value="250KBITS">250 Kbit/s</option>
-            <option value="125KBITS">125 Kbit/s</option>
-            <option value="100KBITS">100 Kbit/s</option>
-            <option value="50KBITS">50 Kbit/s</option>
-            <option value="25KBITS">25 Kbit/s</option>
-        </select>
+        <select name="canBitRate" id="canBitRate">)" + optionsHtml + R"(</select>
         <input type="submit" value="Update Settings">
     </form>
-    <form action="/applyFilter" method="post">
-        <label for="canIdFilter">CAN ID Filter:</label>
-        <input type="text" id="canIdFilter" name="canIdFilter" placeholder="0x123">
-        <input type="submit" name="filterAction" value="Enable Filter">
-        <input type="submit" name="filterAction" value="Disable Filter">
+    <div class="button-group">
+        <form action="/allowAll" method="get">
+            <button type="submit" class=")" + allowAllButtonClass + R"(" >Allow all messages</button>
+        </form>
+        <form action="/blockAll" method="get">
+            <button type="submit" class=")" + blockAllButtonClass + R"(" >Block all messages</button>
+        </form>
+    </div>
+    <div>
+        <h2>Whitelist</h2>
+        )" + whitelistHtml + R"(
+        <h2>Blacklist</h2>
+        )" + blacklistHtml + R"(
+    </div>
+    <form action="/updateList" method="post">
+        <label for="canId">CAN ID:</label>
+        <input type="text" id="canId" name="canId" placeholder="e.g. 0x123">
+        <input type="submit" name="listAction" value="Add to Whitelist">
+        <input type="submit" name="listAction" value="Add to Blacklist">
+    </form>
+    <form action="/clearList" method="post">
+        <input type="submit" name="listAction" value="Delete Whitelist">
+        <input type="submit" name="listAction" value="Delete Blacklist">
     </form>
     <form action="/restart" method="get">
-        <input type="submit" value="Neustart">
+        <input type="submit" value="Restart">
     </form>
 </body>
 </html>
@@ -122,7 +184,9 @@ void WebServerManager::handleUpdate(AsyncWebServerRequest *request)
     if (request->hasParam("remoteIp", true) && request->hasParam("canBitRate", true))
     {
         String newIp = request->getParam("remoteIp", true)->value();
+        storedRemoteIp = newIp; // Speichere die neue IP-Adresse
         IPAddress newRemoteIp;
+        currentBitRate = request->getParam("canBitRate", true)->value();
         newRemoteIp.fromString(newIp);
         udpCommunicator.updateRemoteIp(newRemoteIp);
 
@@ -177,24 +241,4 @@ void WebServerManager::handleUpdate(AsyncWebServerRequest *request)
     {
         request->send(400, "text/html", "Missing information!<br><a href='/'>Try Again</a>");
     }
-}
-
-void WebServerManager::handleApplyFilter(AsyncWebServerRequest *request) {
-    if (request->hasParam("canIdFilter", true)) {
-        String canIdFilter = request->getParam("canIdFilter", true)->value();
-        uint32_t canId = strtoul(canIdFilter.c_str(), nullptr, 16); // Umwandlung in eine Zahl
-        udpCommunicator.updateFilterId(canId);
-    }
-
-    // Überprüfe, welche Aktion ausgeführt werden soll
-    if (request->hasParam("filterAction", true)) {
-        String action = request->getParam("filterAction", true)->value();
-        if (action == "Enable Filter") {
-            udpCommunicator.setFilterEnabled(true);
-        } else if (action == "Disable Filter") {
-            udpCommunicator.setFilterEnabled(false);
-        }
-    }
-
-    request->send(200, "text/html", "Filter settings updated!<br><a href='/'>Go Back</a>");
 }
