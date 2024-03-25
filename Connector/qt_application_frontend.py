@@ -6,7 +6,7 @@ from collections import deque
 from PyQt5 import QtWidgets, uic
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QPushButton, QTextBrowser, QVBoxLayout, 
-    QWidget, QLabel, QLineEdit, QRadioButton, QTextEdit, QScrollArea
+    QWidget, QLabel, QLineEdit, QRadioButton, QTextEdit, QScrollArea, QDialog
 )
 import threading
 from PyQt5.QtCore import pyqtSignal, QObject
@@ -14,40 +14,50 @@ from PyQt5.QtCore import pyqtSignal, QObject
 #*********************************************************************************************************
 def loop():
     my_connector = Connector()
-    my_msg_logger = MessageLogger()
 
     while True:
-
-        message_flag, dict_message = my_connector.recieve_message()
-
-        if 1 == message_flag: # printing recieved message information
-            print("Received CANETH Message: ", "ID:", dict_message["ID"], "\tData:", dict_message["Data"], "\tExt:", dict_message["Ext"], "\tRTR:", dict_message["RTR"] )
-        elif 0 == message_flag:
-            print("Recieved message's IPv4 adress is blacklisted")
-        elif 2 == message_flag:
-            print("Recieved message's IPv4 adress is not whitlisted")
-        elif -1 == message_flag:
-            print("No message recieved")
-            time.sleep(0.1)
-        else:
-            print("message flag invalid.")
-
         # sending test message
         test_input = "00 01 02 03 04 FD FE FF"
         binary_string = convert_to_binary_string(test_input)
         can_id_hex = 0x123
         my_connector.send_message(can_id_hex, binary_string)
 
-        # print all recent messages       
-        for message in my_msg_logger.get_recent_messages():
-            print("Received CANETH Message: ", "ID:", message["ID"], "\tData:", message["Data"], "\tExt:", message["Ext"], "\tRTR:", message["RTR"])
+class PopupWindow(QDialog):
+    def __init__(self, connector: Connector):
+        super().__init__()
 
-        # print all exact messages
-        for message in my_msg_logger.get_exact_messages():
-            print("Received CANETH Message: ", "ID:", message["ID"], "\tData:", message["Data"], "\tExt:", message["Ext"], "\tRTR:", message["RTR"])
-                      
-        my_msg_logger.log_recent_message(message_flag, dict_message)
-        my_msg_logger.log_exact_message(message_flag, dict_message)
+        self.my_connector = connector
+        self.UDP_IP, self.shared_UDP_port = self.my_connector.get_UDP_socket_info()
+
+        self.setWindowTitle('Popup')
+        layout = QVBoxLayout()
+
+        self.label1 = QLabel()
+        self.label1.setText("UDP IP: default value 0.0.0.0")
+        self.edit1 = QLineEdit()
+        self.edit1.setText(self.UDP_IP)
+
+        self.label2 = QLabel()
+        self.label2.setText("UDP Port: default value 4210")
+        self.edit2 = QLineEdit()
+        self.edit2.setText(str(self.shared_UDP_port))
+
+        layout.addWidget(self.label1)
+        layout.addWidget(self.edit1)
+        layout.addWidget(self.label2)
+        layout.addWidget(self.edit2)
+
+        update_button = QPushButton('Update')
+        update_button.clicked.connect(self.update_socket)
+        layout.addWidget(update_button)
+
+        self.setLayout(layout)
+
+    def update_socket(self):
+        # Hier kannst du die Eingaben aus den QLineEdit-Widgets verwenden
+        UDP_IP = self.edit1.text()
+        UPD_Port = int(self.edit2.text())
+        self.my_connector.update_UDP_socket(UDP_IP, UPD_Port )
 
 #*********************************************************************************************************
 class MessageReceiver(QObject):
@@ -163,6 +173,10 @@ class ConnectorApp(QtWidgets.QMainWindow):
         self.lineEdit_max_log_msg = self.findChild(QLineEdit, 'lineEdit_max_log_msg')
         self.lineEdit_max_log_msg.setText("Number of mesages")
 
+        # init update Socket
+        self.pushButton_Advanced_Settings = self.findChild(QPushButton, 'pushButton_Advanced_Settings')
+        self.pushButton_Advanced_Settings.clicked.connect(self.open_popup_update_socket)
+
         # init IPv4 filter
         self.pushButton_clear_IPv4_filter = self.findChild(QPushButton, 'pushButton_clear_IPv4_filter')
         self.pushButton_clear_IPv4_filter.clicked.connect(self.pushed_pushButton_clear_IPv4_filter)
@@ -215,7 +229,11 @@ class ConnectorApp(QtWidgets.QMainWindow):
         self.textBrowser_canID_whitelist = self.findChild(QTextBrowser, 'textBrowser_canID_whitelist')
         self.textBrowser_canID_whitelist.setText("Here, whitelisted CAN-IDs will be listed.\nCurrently the whitelist is empty.\nInput CAN-ID as Integer from 0x000 to 0x7FF.")
 
-    
+    #************************************************************************************
+    # Methods for updating the Socket for recieving messages
+    def open_popup_update_socket(self):
+        popup = PopupWindow(self.my_connector)
+        popup.exec_()
     
     #************************************************************************************
     # Methods for the live view of recieved can messages and the logging of messages

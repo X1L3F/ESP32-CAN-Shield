@@ -293,7 +293,7 @@
      <rect>
       <x>830</x>
       <y>10</y>
-      <width>331</width>
+      <width>271</width>
       <height>41</height>
      </rect>
     </property>
@@ -683,6 +683,20 @@
     </property>
     <property name="text">
      <string>CLEAR</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_Advanced_Settings">
+    <property name="geometry">
+     <rect>
+      <x>1110</x>
+      <y>10</y>
+      <width>61</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Advanced 
+Settings</string>
     </property>
    </widget>
   </widget>

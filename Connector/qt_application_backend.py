@@ -78,7 +78,7 @@ class Connector:
 
         self.target_IP = "192.168.0.240"  # Target IP to send messages to and from.
         self.UDP_IP = "0.0.0.0"  # Listen on all network interfaces.
-        self.shared_UDP_port = 4210  # Designated UDP port for communication.
+        self.shared_UDP_port = 4210  # Designated UDP port for communication. Recommenadtion: Using Userports from 1024 to 49151 for IPv4
         self.recieve_flag = False  # Flag to control message receiving.
         self.whitelist_enabled = False  # Flag to enable whitelist filtering.
         self.blacklist_enabled = False  # Flag to enable blacklist filtering.
@@ -99,6 +99,13 @@ class Connector:
         # updating UDP socket
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind((self.UDP_IP, self.shared_UDP_port))
+    
+    def get_UDP_socket_info(self):
+        # FUNC: returns the current Socket information
+        # INPUT: ---
+        # RETURN: UDP_IP as string;     e.g.: "0.0.0.0"
+        #        shared_UDP_port as int
+        return self.UDP_IP, self.shared_UDP_port
 
     def updated_target_IP(self, input_target_IP):
         # FUNC: updating the target IP
