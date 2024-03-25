@@ -126,21 +126,21 @@ class ConnectorApp(QtWidgets.QMainWindow):
         ui_path = os.path.join(current_dir, 'qt_application.ui')
         uic.loadUi(ui_path, self)
 
-        self.initUI()
         self.init_backend()
+        self.init_variables()
+        self.initUI()
 
     def initUI(self):
+        # init live view of recieved messages, logged messages and info texts
         self.textBrowser_rec_msg = self.findChild(QTextBrowser, 'textBrowser_rec_msg')
         self.textBrowser_log_msg = self.findChild(QTextBrowser, 'textBrowser_log_msg')
-        self.textBrowser_IPv4_blacklist = self.findChild(QTextBrowser, 'textBrowser_IPv4_blacklist')
-        self.textBrowser_IPv4_whitelist = self.findChild(QTextBrowser, 'textBrowser_IPv4_whitelist')
+        
         self.textBrowser_canID_blacklist = self.findChild(QTextBrowser, 'textBrowser_canID_blacklist')
         self.textBrowser_canID_whitelist = self.findChild(QTextBrowser, 'textBrowser_canID_whitelist')
 
         self.textBrowser_rec_msg.setText("Here, received filtered messages will be continuously displayed.")
         self.textBrowser_log_msg.setText("Here, logged filtered messages will be displayed.")
-        self.textBrowser_IPv4_blacklist.setText("Here, blacklisted IPv4 adresses will be listed.\nCurrently the blacklist is empty.")
-        self.textBrowser_IPv4_whitelist.setText("Here, whitelisted IPv4 adresses will be listed.\nCurrently the whitelist is empty.")
+        
         self.textBrowser_canID_blacklist.setText("Here, blacklisted CAN-IDs will be listed.\nCurrently the blacklist is empty.")
         self.textBrowser_canID_whitelist.setText("Here, whitelisted CAN-IDs will be listed.\nCurrently the whitelist is empty.")
 
@@ -156,13 +156,45 @@ class ConnectorApp(QtWidgets.QMainWindow):
         self.lineEdit_max_log_msg = self.findChild(QLineEdit, 'lineEdit_max_log_msg')
         self.lineEdit_max_log_msg.setText("Number of mesages")
 
+        # init IPv4 filter
+        self.pushButton_clear_IPv4_filter = self.findChild(QPushButton, 'pushButton_clear_IPv4_filter')
+        self.pushButton_clear_IPv4_filter.clicked.connect(self.pushed_pushButton_clear_IPv4_filter)
+            # blacklist
+        self.radioButton_enable_IPv4_blacklist = self.findChild(QRadioButton, 'radioButton_enable_IPv4_blacklist')
+        self.radioButton_enable_IPv4_blacklist.clicked.connect(self.my_connector.enable_blacklist_IPv4_address)
+
+        self.lineEdit_add_IPv4_blacklist = self.findChild(QLineEdit, 'lineEdit_add_IPv4_blacklist')
+
+        self.pushButton_add_IPv4_blacklist = self.findChild(QPushButton, 'pushButton_add_IPv4_blacklist')
+        self.pushButton_add_IPv4_blacklist.clicked.connect(self.pushed_pushButton_add_IPv4_blacklist)
+
+        self.textBrowser_IPv4_blacklist = self.findChild(QTextBrowser, 'textBrowser_IPv4_blacklist')
+        self.textBrowser_IPv4_blacklist.setText("Here, blacklisted IPv4 adresses will be listed.\nCurrently the blacklist is empty.")
+            #whitelist
+        self.radioButton_enable_IPv4_whitelist = self.findChild(QRadioButton, 'radioButton_enable_IPv4_whitelist')
+        self.radioButton_enable_IPv4_whitelist.clicked.connect(self.my_connector.enable_whitelist_IPv4_address)
+
+        self.lineEdit_add_IPv4_whitelist = self.findChild(QLineEdit, 'lineEdit_add_IPv4_whitelist')
+
+        self.pushButton_add_IPv4_whitelist = self.findChild(QPushButton, 'pushButton_add_IPv4_whitelist')
+        self.pushButton_add_IPv4_whitelist.clicked.connect(self.pushed_pushButton_add_IPv4_whitelist)
+
+        self.textBrowser_IPv4_whitelist = self.findChild(QTextBrowser, 'textBrowser_IPv4_whitelist')
+        self.textBrowser_IPv4_whitelist.setText("Here, whitelisted IPv4 adresses will be listed.\nCurrently the whitelist is empty.")
+    
+    def init_variables(self):
+        self.IPv4_blacklist_elements= 0
+        self.IPv4_whitlist_elements= 0
+
     def init_backend(self):
         self.my_connector = Connector()
         self.my_msg_logger = MessageLogger()
         self.my_message_receiver = MessageReceiver(self.my_connector,self.my_msg_logger)
         self.my_message_receiver.deque_updated_rec_msg.connect(self.display_rec_message_deque)
         self.my_message_receiver.deque_updated_log_msg.connect(self.display_log_message_deque)
-
+    
+    #************************************************************************************
+    # Methods for the live view of recieved can messages and the logging of messages
     def toggle_button_text_start_stop(self):
         current_text = self.pushButton_start_stop.text()
         if current_text == 'Start':
@@ -227,7 +259,35 @@ class ConnectorApp(QtWidgets.QMainWindow):
                 self.textBrowser_log_msg.append(print_string)
         except:
             pass
- 
+
+    #************************************************************************************
+    # IPv4 adress filter methods
+    def pushed_pushButton_clear_IPv4_filter(self):
+        self.my_connector.blacklist_clear_IPv4_addresses()
+        self.my_connector.whitelist_clear_IPv4_addresses()
+        self.textBrowser_IPv4_blacklist.setText("Here, blacklisted IPv4 adresses will be listed.\nCurrently the blacklist is empty.")
+        self.textBrowser_IPv4_whitelist.setText("Here, whitelisted IPv4 adresses will be listed.\nCurrently the whitelist is empty.")
+        self.IPv4_blacklist_elements= 0
+        self.IPv4_whitlist_elements= 0
+
+    def pushed_pushButton_add_IPv4_blacklist(self):
+        new_IPv4_address = (self.lineEdit_add_IPv4_blacklist.text())
+        self.my_connector.blacklist_add_IPv4_address(new_IPv4_address)
+        if 0 == self.IPv4_blacklist_elements:
+            self.textBrowser_IPv4_blacklist.setText(new_IPv4_address)
+            self.IPv4_blacklist_elements= 1
+        else: 
+            self.textBrowser_IPv4_blacklist.append(new_IPv4_address)
+
+    def pushed_pushButton_add_IPv4_whitelist(self):
+        new_IPv4_address = (self.lineEdit_add_IPv4_whitelist.text())
+        self.my_connector.whitelist_add_IPv4_address(new_IPv4_address)
+        if 0 == self.IPv4_whitlist_elements:
+            self.textBrowser_IPv4_whitelist.setText(new_IPv4_address)
+            self.IPv4_whitlist_elements= 1
+        else:
+            self.textBrowser_IPv4_whitelist.append(new_IPv4_address)            
+
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
