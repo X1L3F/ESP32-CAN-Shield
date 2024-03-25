@@ -130,19 +130,26 @@ class ConnectorApp(QtWidgets.QMainWindow):
         self.init_variables()
         self.initUI()
 
+    def init_backend(self):
+        self.my_connector = Connector()
+        self.my_msg_logger = MessageLogger()
+        self.my_message_receiver = MessageReceiver(self.my_connector,self.my_msg_logger)
+        self.my_message_receiver.deque_updated_rec_msg.connect(self.display_rec_message_deque)
+        self.my_message_receiver.deque_updated_log_msg.connect(self.display_log_message_deque)
+    
+    def init_variables(self):
+        self.IPv4_blacklist_elements= 0
+        self.IPv4_whitlist_elements= 0
+        self.canid_blacklist_elements= 0
+        self.canid_whitlist_elements= 0
+
     def initUI(self):
         # init live view of recieved messages, logged messages and info texts
         self.textBrowser_rec_msg = self.findChild(QTextBrowser, 'textBrowser_rec_msg')
         self.textBrowser_log_msg = self.findChild(QTextBrowser, 'textBrowser_log_msg')
-        
-        self.textBrowser_canID_blacklist = self.findChild(QTextBrowser, 'textBrowser_canID_blacklist')
-        self.textBrowser_canID_whitelist = self.findChild(QTextBrowser, 'textBrowser_canID_whitelist')
 
         self.textBrowser_rec_msg.setText("Here, received filtered messages will be continuously displayed.")
         self.textBrowser_log_msg.setText("Here, logged filtered messages will be displayed.")
-        
-        self.textBrowser_canID_blacklist.setText("Here, blacklisted CAN-IDs will be listed.\nCurrently the blacklist is empty.")
-        self.textBrowser_canID_whitelist.setText("Here, whitelisted CAN-IDs will be listed.\nCurrently the whitelist is empty.")
 
         self.pushButton_start_stop = self.findChild(QPushButton, 'pushButton_start_stop')
         self.pushButton_start_stop.clicked.connect(self.toggle_button_text_start_stop)
@@ -181,17 +188,34 @@ class ConnectorApp(QtWidgets.QMainWindow):
 
         self.textBrowser_IPv4_whitelist = self.findChild(QTextBrowser, 'textBrowser_IPv4_whitelist')
         self.textBrowser_IPv4_whitelist.setText("Here, whitelisted IPv4 adresses will be listed.\nCurrently the whitelist is empty.")
-    
-    def init_variables(self):
-        self.IPv4_blacklist_elements= 0
-        self.IPv4_whitlist_elements= 0
 
-    def init_backend(self):
-        self.my_connector = Connector()
-        self.my_msg_logger = MessageLogger()
-        self.my_message_receiver = MessageReceiver(self.my_connector,self.my_msg_logger)
-        self.my_message_receiver.deque_updated_rec_msg.connect(self.display_rec_message_deque)
-        self.my_message_receiver.deque_updated_log_msg.connect(self.display_log_message_deque)
+        # init CAN-ID filter
+        self.pushButton_clear_canid_filter = self.findChild(QPushButton, 'pushButton_clear_canid_filter')
+        self.pushButton_clear_canid_filter.clicked.connect(self.pushed_pushButton_clear_canid_filter)
+            # blacklist
+        self.radioButton_enable_canid_blacklist = self.findChild(QRadioButton, 'radioButton_enable_canid_blacklist')
+        self.radioButton_enable_canid_blacklist.clicked.connect(self.my_msg_logger.enable_blacklist_msgID)
+
+        self.lineEdit_add_canid_blacklist = self.findChild(QLineEdit, 'lineEdit_add_canid_blacklist')
+
+        self.pushButton_add_canid_blacklist = self.findChild(QPushButton, 'pushButton_add_canid_blacklist')
+        self.pushButton_add_canid_blacklist.clicked.connect(self.pushed_pushButton_add_canid_blacklist)
+
+        self.textBrowser_canID_blacklist = self.findChild(QTextBrowser, 'textBrowser_canID_blacklist')
+        self.textBrowser_canID_blacklist.setText("Here, blacklisted CAN-IDs will be listed.\nCurrently the blacklist is empty.\nInput CAN-ID as Integer from 0x000 to 0x7FF.")
+            #whitelist
+        self.radioButton_enable_canid_whitelist = self.findChild(QRadioButton, 'radioButton_enable_canid_whitelist')
+        self.radioButton_enable_canid_whitelist.clicked.connect(self.my_msg_logger.enable_whitelist_msgID)
+
+        self.lineEdit_add_canid_whitelist = self.findChild(QLineEdit, 'lineEdit_add_canid_whitelist')
+
+        self.pushButton_add_canid_whitelist = self.findChild(QPushButton, 'pushButton_add_canid_whitelist')
+        self.pushButton_add_canid_whitelist.clicked.connect(self.pushed_pushButton_add_canid_whitelist)
+
+        self.textBrowser_canID_whitelist = self.findChild(QTextBrowser, 'textBrowser_canID_whitelist')
+        self.textBrowser_canID_whitelist.setText("Here, whitelisted CAN-IDs will be listed.\nCurrently the whitelist is empty.\nInput CAN-ID as Integer from 0x000 to 0x7FF.")
+
+    
     
     #************************************************************************************
     # Methods for the live view of recieved can messages and the logging of messages
@@ -287,6 +311,34 @@ class ConnectorApp(QtWidgets.QMainWindow):
             self.IPv4_whitlist_elements= 1
         else:
             self.textBrowser_IPv4_whitelist.append(new_IPv4_address)            
+    
+    #************************************************************************************
+    # CAN ID filter methods
+    def pushed_pushButton_clear_canid_filter(self):
+        self.my_msg_logger.blacklist_clear_msgIDs()
+        self.my_msg_logger.whitelist_clear_msgIDs()
+        self.textBrowser_canID_blacklist.setText("Here, blacklisted CAN-IDs will be listed.\nCurrently the blacklist is empty.\nInput CAN-ID as Integer from 0x000 to 0x7FF.")
+        self.textBrowser_canID_whitelist.setText("Here, whitelisted CAN-IDs will be listed.\nCurrently the whitelist is empty.\nInput CAN-ID as Integer from 0x000 to 0x7FF.")
+        self.canid_blacklist_elements= 0
+        self.canid_whitlist_elements= 0
+
+    def pushed_pushButton_add_canid_blacklist(self):
+        new_canid = int(self.lineEdit_add_canid_blacklist.text())
+        self.my_msg_logger.blacklist_add_msgID(new_canid)
+        if 0 == self.canid_blacklist_elements:
+            self.textBrowser_canID_blacklist.setText(str(new_canid))
+            self.canid_blacklist_elements= 1
+        else: 
+            self.textBrowser_canID_blacklist.append(str(new_canid))
+
+    def pushed_pushButton_add_canid_whitelist(self):
+        new_canid = int(self.lineEdit_add_canid_whitelist.text())
+        self.my_msg_logger.whitelist_add_msgID(new_canid)
+        if 0 == self.canid_whitlist_elements:
+            self.textBrowser_canID_whitelist.setText(str(new_canid))
+            self.canid_whitlist_elements= 1
+        else:
+            self.textBrowser_canID_whitelist.append(str(new_canid))  
 
 if __name__ == "__main__":
     import sys
