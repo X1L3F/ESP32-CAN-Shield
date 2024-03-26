@@ -8,31 +8,37 @@ void UdpCommunicator::begin()
   _udp.begin(4210);
 }
 
+//Updates the IP from the Webserver-Input
 void UdpCommunicator::updateRemoteIp(const IPAddress &newRemoteIp)
 {
   _remoteIp = newRemoteIp;
 }
 
+//Adds the ID input from the Webserver to the Whitelist
 void UdpCommunicator::addToWhitelist(uint32_t id) {
     if (std::find(whitelist.begin(), whitelist.end(), id) == whitelist.end()) {
         whitelist.push_back(id);
     }
 }
 
+//Adds the ID input from the Webserver to the Blacklist
 void UdpCommunicator::addToBlacklist(uint32_t id) {
     if (std::find(blacklist.begin(), blacklist.end(), id) == blacklist.end()) {
         blacklist.push_back(id);
     }
 }
 
+//Clears the Whitelist
 void UdpCommunicator::clearWhitelist() {
   whitelist.clear(); // Lösche alle Einträge in der Whitelist
 }
 
+//Clears the Blacklist
 void UdpCommunicator::clearBlacklist() {
   blacklist.clear(); // Lösche alle Einträge in der Blacklist
 }
 
+//Returns the Whitelist to show it on the Webserver
 String UdpCommunicator::getWhitelistAsString() const {
     String listHtml = "<ul>";
     for (uint32_t id : whitelist) {
@@ -42,6 +48,7 @@ String UdpCommunicator::getWhitelistAsString() const {
     return listHtml;
 }
 
+//Returns the Blacklist to show it on the Webserver
 String UdpCommunicator::getBlacklistAsString() const {
     String listHtml = "<ul>";
     for (uint32_t id : blacklist) {
@@ -51,28 +58,35 @@ String UdpCommunicator::getBlacklistAsString() const {
     return listHtml;
 }
 
+//Sets the variable allowAll
+//allowAll = true: All messages are being forwarded
+//allowAll = false: All messages are being blocked
 void UdpCommunicator::setAllowAll(bool allow) {
     allowAll = allow;
 }
 
+//Returns allowAll
 bool UdpCommunicator::isAllowAllEnabled() const {
     return allowAll;
 }
 
+//Checks if the ID from the message is in the White/Blacklist
 bool UdpCommunicator::isAllowed(uint32_t id) {
   if (allowAll) {
-    // Erlaube alle, außer die ID ist in der Blacklist
+    // Allow all messages, except the IDs on the Blacklist
     return std::find(blacklist.begin(), blacklist.end(), id) == blacklist.end();
   } else {
-    // Blockiere alle, außer die ID ist in der Whitelist
+    // Block all messages, except the IDs on the Whitelist
     return std::find(whitelist.begin(), whitelist.end(), id) != whitelist.end();
   }
 }
 
+//Sends the UDP-Messages to the RemoteIP
 void UdpCommunicator::send(uint32_t id, const uint8_t *data, uint8_t length, bool extFlag, bool rtrFlag)
 {
+  //Check if the ID is on the Black/Whitelist
   if (!isAllowed(id)) {
-    return; // Nicht senden, wenn die ID gefiltert wird
+    return;
   }
   uint8_t buffer[25];
   int messageLength = encodeCanEthMessage(id, data, length, extFlag, rtrFlag, buffer);
@@ -81,6 +95,7 @@ void UdpCommunicator::send(uint32_t id, const uint8_t *data, uint8_t length, boo
   _udp.endPacket();
 }
 
+//Encode the UDP-Message to a CAN Message
 int UdpCommunicator::encodeCanEthMessage(uint32_t id, const uint8_t *data, uint8_t length, bool extFlag, bool rtrFlag, uint8_t *buffer)
 {
   const char *magicId = "ISO11898"; // CANETH protocol magic identifier
@@ -110,6 +125,7 @@ int UdpCommunicator::encodeCanEthMessage(uint32_t id, const uint8_t *data, uint8
   return 25; // Total length of encoded message
 }
 
+//Receive the UDP-Messages
 bool UdpCommunicator::receive(uint32_t &id, uint8_t *data, uint8_t &length, bool &extFlag, bool &rtrFlag)
 {
   int packetSize = _udp.parsePacket();
@@ -122,6 +138,7 @@ bool UdpCommunicator::receive(uint32_t &id, uint8_t *data, uint8_t &length, bool
   return false;
 }
 
+//Decode the CAN-Message to a UDP-Message
 bool UdpCommunicator::decodeCanEthMessage(const uint8_t *buffer, int len, uint32_t &id, uint8_t *data, uint8_t &length, bool &extFlag, bool &rtrFlag)
 {
   if (len >= 25 && strncmp((const char *)buffer, "ISO11898", 8) == 0)
@@ -138,3 +155,4 @@ bool UdpCommunicator::decodeCanEthMessage(const uint8_t *buffer, int len, uint32
   }
   return false;
 }
+

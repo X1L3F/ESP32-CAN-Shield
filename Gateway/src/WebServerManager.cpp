@@ -3,31 +3,38 @@
 WebServerManager::WebServerManager(CanController &canCtrl, UdpCommunicator &udpComm)
     : server(80), canController(canCtrl), udpCommunicator(udpComm) {}
 
+//Handles the User-Inputs from the Webserver
+//and calls the corresponding functions to update the lists/variables from the UPD communicator.
 void WebServerManager::begin() {
     server.on("/", HTTP_GET, [this](AsyncWebServerRequest *request) {
         request->send(200, "text/html", getHtmlContent());
     });
 
+    //Update the Settings
     server.on("/update", HTTP_POST, [this](AsyncWebServerRequest *request) {
         this->handleUpdate(request);
     });
 
+    //Restart the ESP32
     server.on("/restart", HTTP_GET, [this](AsyncWebServerRequest *request) {
         request->send(200, "text/html", "ESP Restarted!<br><a href='/'>Go Back</a>");
         delay(1000); // Kurze Verzögerung
         ESP.restart();
     });
 
+    //Allow all messages
     server.on("/allowAll", HTTP_GET, [this](AsyncWebServerRequest *request) {
         udpCommunicator.setAllowAll(true);
         request->send(200, "text/html", "All messages are allowed, except Blacklist.<br><a href='/'>Go Back</a>");
     });
 
+    //Block all messages
     server.on("/blockAll", HTTP_GET, [this](AsyncWebServerRequest *request) {
         udpCommunicator.setAllowAll(false);
         request->send(200, "text/html", "Block all messages, except Whitelist.<br><a href='/'>Go Back</a>");
     });
 
+    //Update the Black/Whitelist
     server.on("/updateList", HTTP_POST, [this](AsyncWebServerRequest *request) {
         if (request->hasParam("canId", true) && request->hasParam("listAction", true)) {
             String canIdStr = request->getParam("canId", true)->value();
@@ -46,6 +53,7 @@ void WebServerManager::begin() {
         }
     });
 
+    //Clears the Black/Whitelist
     server.on("/clearList", HTTP_POST, [this](AsyncWebServerRequest *request) {
         if (request->hasParam("listAction", true)) {
             String action = request->getParam("listAction", true)->value();
@@ -65,6 +73,7 @@ void WebServerManager::begin() {
     server.begin();
 }
 
+//HTML-Code of the Webserver
 String WebServerManager::getHtmlContent() {
     bool allowAll = udpCommunicator.isAllowAllEnabled();
     String allowAllButtonClass = allowAll ? "button-active" : "button-inactive";
@@ -74,9 +83,8 @@ String WebServerManager::getHtmlContent() {
     for (const String &option : bitrateOptions) {
         optionsHtml += "<option value=\"" + option + "\"" + (option == currentBitRate ? " selected" : "") + ">" + option + "</option>\n";
     }
-    String whitelistHtml = udpCommunicator.getWhitelistAsString(); // Angenommen, diese Methode gibt die Whitelist als formatierten HTML-String zurück
-    String blacklistHtml = udpCommunicator.getBlacklistAsString(); // Analog für die Blacklist
-
+    String whitelistHtml = udpCommunicator.getWhitelistAsString();
+    String blacklistHtml = udpCommunicator.getBlacklistAsString();
 
     return R"(
 <!DOCTYPE html>
@@ -95,19 +103,26 @@ String WebServerManager::getHtmlContent() {
         h1 {
             color: #333;
         }
-        form {
+        form, .container {
             background-color: #ffffff;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin-bottom: 20px;
         }
+        .container {
+            display: flex;
+            justify-content: space-between;
+        }
+        .column {
+            width: 48%;
+        }
         label {
             margin-top: 10px;
             display: block;
             color: #666;
         }
-        input[type="text"], select, .button-group button {
+        input[type="text"], select, button {
             width: 100%;
             padding: 10px;
             margin-top: 5px;
@@ -116,24 +131,17 @@ String WebServerManager::getHtmlContent() {
             border: 1px solid #ddd;
             box-sizing: border-box;
         }
-        .button-group {
-            display: flex;
-            justify-content: start;
-            gap: 10px; /* Abstand zwischen den Buttons */
-        }
-        .button-group button {
-            flex-grow: 1;
-        }
-        .button-active {
+        button {
             background-color: #007bff;
             color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            opacity: 0.8;
         }
         .button-inactive {
             background-color: #6c757d;
-            color: white;
-        }
-        .button-group button:hover {
-            opacity: 0.8;
         }
     </style>
 </head>
@@ -141,35 +149,46 @@ String WebServerManager::getHtmlContent() {
     <h1>CAN Configuration</h1>
     <form action="/update" method="post">
         <label for="remoteIp">Remote IP:</label>
-         <input type="text" id="remoteIp" name="remoteIp" placeholder="192.168.4.1" value=")" + storedRemoteIp + R"(">
+        <input type="text" id="remoteIp" name="remoteIp" placeholder="192.168.4.1" value=")" + storedRemoteIp + R"(">
         <label for="canBitRate">CAN Bit Rate:</label>
         <select name="canBitRate" id="canBitRate">)" + optionsHtml + R"(</select>
-        <input type="submit" value="Update Settings">
+        <button type="submit">Update Settings</button>
     </form>
-    <div class="button-group">
-        <form action="/allowAll" method="get">
-            <button type="submit" class=")" + allowAllButtonClass + R"(" >Allow all messages</button>
-        </form>
-        <form action="/blockAll" method="get">
-            <button type="submit" class=")" + blockAllButtonClass + R"(" >Block all messages</button>
-        </form>
+
+    <h1>Filter Settings</h1>
+    <div class="container">
+        <div class="column">
+            <form action="/allowAll" method="get">
+                <button type="submit" class=")" + allowAllButtonClass + R"(">Allow all messages</button>
+            </form>
+            <form action="/updateList" method="post">
+                <label for="canId">CAN ID:</label>
+                <input type="text" id="canId" name="canId" placeholder="e.g. 0x123">
+                <button type="submit" name="listAction" value="Add to Blacklist">Add to Blacklist</button>
+            </form>
+            <form action="/clearList" method="post">
+                <button type="submit" name="listAction" value="Delete Blacklist">Delete Blacklist</button>
+            </form>
+            <h2>Blacklist</h2>
+            )" + blacklistHtml + R"(
+        </div>
+        <div class="column">
+            <form action="/blockAll" method="get">
+                <button type="submit" class=")" + blockAllButtonClass + R"(">Block all messages</button>
+            </form>
+            <form action="/updateList" method="post">
+                <label for="canId">CAN ID:</label>
+                <input type="text" id="canId" name="canId" placeholder="e.g. 0x123">
+                <button type="submit" name="listAction" value="Add to Whitelist">Add to Whitelist</button>
+            </form>
+            <form action="/clearList" method="post">
+                <button type="submit" name="listAction" value="Delete Whitelist">Delete Whitelist</button>
+            </form>
+            <h2>Whitelist</h2>
+            )" + whitelistHtml + R"(
+        </div>
     </div>
-    <div>
-        <h2>Whitelist</h2>
-        )" + whitelistHtml + R"(
-        <h2>Blacklist</h2>
-        )" + blacklistHtml + R"(
-    </div>
-    <form action="/updateList" method="post">
-        <label for="canId">CAN ID:</label>
-        <input type="text" id="canId" name="canId" placeholder="e.g. 0x123">
-        <input type="submit" name="listAction" value="Add to Whitelist">
-        <input type="submit" name="listAction" value="Add to Blacklist">
-    </form>
-    <form action="/clearList" method="post">
-        <input type="submit" name="listAction" value="Delete Whitelist">
-        <input type="submit" name="listAction" value="Delete Blacklist">
-    </form>
+
     <form action="/restart" method="get">
         <input type="submit" value="Restart">
     </form>
@@ -178,7 +197,7 @@ String WebServerManager::getHtmlContent() {
     )";
 }
 
-
+//Calls the corresponding functions from the UdpCommunicator to update the settings
 void WebServerManager::handleUpdate(AsyncWebServerRequest *request)
 {
     if (request->hasParam("remoteIp", true) && request->hasParam("canBitRate", true))
@@ -242,3 +261,5 @@ void WebServerManager::handleUpdate(AsyncWebServerRequest *request)
         request->send(400, "text/html", "Missing information!<br><a href='/'>Try Again</a>");
     }
 }
+
+
