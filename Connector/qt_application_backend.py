@@ -1,6 +1,7 @@
 import socket
 from struct import pack, unpack
 from collections import deque
+import datetime
 
 #*********************************************************************************************************
 def encode_caneth_message(can_id_hex, data_hex, ext_flag=False, rtr_flag=False):
@@ -48,12 +49,16 @@ def decode_caneth_message(message):
     # Unpack flags
     ext_flag, rtr_flag = unpack('BB', message[23:25])
 
+    # Adding time Stamp
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:23]
+
     # Create a dictionary with the decoded message components
     decoded_message = {
         "ID": can_id,
         "Data": data_hex,
         "Ext": bool(ext_flag),
-        "RTR": bool(rtr_flag)
+        "RTR": bool(rtr_flag),
+        "Time": timestamp
     }
     return decoded_message
 # Test status: successfull tested

@@ -1,28 +1,18 @@
 from qt_application_backend import ( Connector, MessageLogger,convert_to_binary_string)
 import sys
 import os
-import time
 from collections import deque
 from PyQt5 import QtWidgets, uic
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QPushButton, QTextBrowser, QVBoxLayout, 
-    QWidget, QLabel, QLineEdit, QRadioButton, QPlainTextEdit, QScrollArea, QDialog
+    QPushButton, QTextBrowser, QVBoxLayout, 
+    QLabel, QLineEdit, QRadioButton, QPlainTextEdit, QDialog
 )
 import threading
 from PyQt5.QtCore import pyqtSignal, QObject
 
 #*********************************************************************************************************
-def loop():
-    my_connector = Connector()
-
-    while True:
-        # sending test message
-        test_input = "00 01 02 03 04 FD FE FF"
-        binary_string = convert_to_binary_string(test_input)
-        can_id_hex = 0x123
-        my_connector.send_message(can_id_hex, binary_string)
-
 class PopupWindow(QDialog):
+    # Pop Up Window for advanced Socket settings
     def __init__(self, connector: Connector):
         super().__init__()
 
@@ -54,13 +44,13 @@ class PopupWindow(QDialog):
         self.setLayout(layout)
 
     def update_socket(self):
-        # Hier kannst du die Eingaben aus den QLineEdit-Widgets verwenden
-        UDP_IP = self.edit1.text()
+        in_UDP_IP = self.edit1.text()
         UPD_Port = int(self.edit2.text())
-        self.my_connector.update_UDP_socket(UDP_IP, UPD_Port )
+        self.my_connector.update_UDP_socket(in_UDP_IP, UPD_Port )
 
 #*********************************************************************************************************
 class MessageReceiver(QObject):
+    # Multithreading Object for non blocking recieving messages
     deque_updated_rec_msg = pyqtSignal(deque)
     deque_updated_log_msg = pyqtSignal(deque)
 
@@ -68,7 +58,7 @@ class MessageReceiver(QObject):
         super().__init__()
         self.my_connector = connector
         self.my_msg_logger = message_logger
-        self.recent_message_deque = deque(maxlen=10)  # Begrenzt die Größe der Queue
+        self.recent_message_deque = deque(maxlen=10)
         self.logging_message_deque = deque()
         self.is_running = False
         self.is_logging = False
@@ -77,21 +67,7 @@ class MessageReceiver(QObject):
 
     def run(self):
         while self.is_running:
-            # Hier Logik zum Empfangen von Nachrichten einfügen
-            # Beispiel:
             message_flag, dict_message =  self.my_connector.recieve_message()
-            if 1 == message_flag: # printing recieved message information
-                print("Received CANETH Message: ", "ID:", dict_message["ID"], "\tData:", dict_message["Data"], "\tExt:", dict_message["Ext"], "\tRTR:", dict_message["RTR"] )
-            elif 0 == message_flag:
-                print("Recieved message's IPv4 adress is blacklisted")
-            elif 2 == message_flag:
-                print("Recieved message's IPv4 adress is not whitlisted")
-            elif -1 == message_flag:
-                print("No message recieved")
-                time.sleep(0.1)
-            else:
-                print("message flag invalid.")
-
             self.my_msg_logger.log_recent_message(message_flag, dict_message)
             self.recent_message_deque = self.my_msg_logger.get_recent_messages()
             self.deque_updated_rec_msg.emit(self.recent_message_deque)
@@ -127,13 +103,13 @@ class MessageReceiver(QObject):
         self.is_logging = False
         self.numb_of_logged_msg = 0
 
-
+#*********************************************************************************************************
 class ConnectorApp(QtWidgets.QMainWindow):
+    # main window of the Connector Application
     def __init__(self):
         super(ConnectorApp, self).__init__()
-        # Laden der .ui Datei
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        ui_path = os.path.join(current_dir, 'qt_application.ui')
+        ui_path = os.path.join(current_dir, 'qt_application.ui') # loading .ui file from QT5 Designer
         uic.loadUi(ui_path, self)
 
         self.init_backend()
@@ -303,7 +279,6 @@ class ConnectorApp(QtWidgets.QMainWindow):
     def toggle_button_text_start_stop(self):
         current_text = self.pushButton_start_stop.text()
         if current_text == 'Start':
-            print("Started")
             self.my_message_receiver.start()
             self.my_thread = threading.Thread(target=self.my_message_receiver.run)
             self.my_thread.start()  # Startet den Thread
@@ -321,7 +296,6 @@ class ConnectorApp(QtWidgets.QMainWindow):
                 }
             ''')
         else:
-            print("Stopped")
             self.my_message_receiver.stop()
             self.my_thread.join()  # Wartet darauf, dass der Thread beendet wird
 
@@ -351,7 +325,7 @@ class ConnectorApp(QtWidgets.QMainWindow):
         self.textBrowser_rec_msg.clear()
         try:
             for message in message_deque:
-                print_string = "ID:" +  str(message["ID"])  +"\tData:" + str(message["Data"]) + "\tExt:" + str(message["Ext"]) + "\tRTR:" + str(message["RTR"])
+                print_string = "ID:" +  str(message["ID"])  +"\tData:" + str(message["Data"]) + "\tExt:" + str(message["Ext"]) + "\tRTR:" + str(message["RTR"]) + "\tTime stamp: " + message["Time"]
                 self.textBrowser_rec_msg.append(print_string)
         except:
             pass
@@ -360,7 +334,7 @@ class ConnectorApp(QtWidgets.QMainWindow):
         self.textBrowser_log_msg.clear()
         try:
             for message in message_deque:
-                print_string = "ID:" +  str(message["ID"])  +"\tData:" + str(message["Data"]) + "\tExt:" + str(message["Ext"]) + "\tRTR:" + str(message["RTR"])
+                print_string = "ID:" +  str(message["ID"])  +"\tData:" + str(message["Data"]) + "\tExt:" + str(message["Ext"]) + "\tRTR:" + str(message["RTR"]) + "\tTime stamp: " + message["Time"]
                 self.textBrowser_log_msg.append(print_string)
         except:
             pass
