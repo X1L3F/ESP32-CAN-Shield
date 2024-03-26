@@ -434,7 +434,7 @@
      <string>Sending CAN-Message</string>
     </property>
    </widget>
-   <widget class="QPlainTextEdit" name="plainTextEdit">
+   <widget class="QPlainTextEdit" name="plainTextEdit_target_ESP_IPv4_adress">
     <property name="geometry">
      <rect>
       <x>20</x>
@@ -450,7 +450,7 @@
      <string>192.168.0.240</string>
     </property>
    </widget>
-   <widget class="QPlainTextEdit" name="plainTextEdit_2">
+   <widget class="QPlainTextEdit" name="plainTextEdit_target_can_id">
     <property name="geometry">
      <rect>
       <x>20</x>
@@ -463,7 +463,7 @@
      <string>69</string>
     </property>
    </widget>
-   <widget class="QPlainTextEdit" name="plainTextEdit_3">
+   <widget class="QPlainTextEdit" name="plainTextEdit_hexadecimal_pair_7">
     <property name="geometry">
      <rect>
       <x>20</x>
@@ -520,7 +520,7 @@
      <string>CAN data</string>
     </property>
    </widget>
-   <widget class="QPlainTextEdit" name="plainTextEdit_4">
+   <widget class="QPlainTextEdit" name="plainTextEdit_hexadecimal_pair_6">
     <property name="geometry">
      <rect>
       <x>90</x>
@@ -538,7 +538,7 @@
      <string>00</string>
     </property>
    </widget>
-   <widget class="QPlainTextEdit" name="plainTextEdit_5">
+   <widget class="QPlainTextEdit" name="plainTextEdit_hexadecimal_pair_5">
     <property name="geometry">
      <rect>
       <x>160</x>
@@ -556,7 +556,7 @@
      <string>00</string>
     </property>
    </widget>
-   <widget class="QPlainTextEdit" name="plainTextEdit_6">
+   <widget class="QPlainTextEdit" name="plainTextEdit_hexadecimal_pair_4">
     <property name="geometry">
      <rect>
       <x>230</x>
@@ -574,7 +574,7 @@
      <string>00</string>
     </property>
    </widget>
-   <widget class="QPlainTextEdit" name="plainTextEdit_7">
+   <widget class="QPlainTextEdit" name="plainTextEdit_hexadecimal_pair_3">
     <property name="geometry">
      <rect>
       <x>300</x>
@@ -592,7 +592,7 @@
      <string>00</string>
     </property>
    </widget>
-   <widget class="QPlainTextEdit" name="plainTextEdit_8">
+   <widget class="QPlainTextEdit" name="plainTextEdit_hexadecimal_pair_2">
     <property name="geometry">
      <rect>
       <x>370</x>
@@ -610,7 +610,7 @@
      <string>00</string>
     </property>
    </widget>
-   <widget class="QPlainTextEdit" name="plainTextEdit_9">
+   <widget class="QPlainTextEdit" name="plainTextEdit_hexadecimal_pair_1">
     <property name="geometry">
      <rect>
       <x>440</x>
@@ -628,7 +628,7 @@
      <string>00</string>
     </property>
    </widget>
-   <widget class="QPlainTextEdit" name="plainTextEdit_10">
+   <widget class="QPlainTextEdit" name="plainTextEdit_hexadecimal_pair_0">
     <property name="geometry">
      <rect>
       <x>510</x>
@@ -646,7 +646,7 @@
      <string>00</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QPushButton" name="pushButton_send_can_msg">
     <property name="geometry">
      <rect>
       <x>390</x>

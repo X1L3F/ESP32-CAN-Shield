@@ -76,7 +76,7 @@ def convert_to_binary_string(input_string):
 class Connector:
     def __init__(self):
 
-        self.target_IP = "192.168.0.240"  # Target IP to send messages to and from.
+        self.target_IP = "192.168.0.240"  # Target IP to send messages to.
         self.UDP_IP = "0.0.0.0"  # Listen on all network interfaces.
         self.shared_UDP_port = 4210  # Designated UDP port for communication. Recommenadtion: Using Userports from 1024 to 49151 for IPv4
         self.recieve_flag = False  # Flag to control message receiving.

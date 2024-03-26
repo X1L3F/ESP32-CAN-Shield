@@ -6,7 +6,7 @@ from collections import deque
 from PyQt5 import QtWidgets, uic
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QPushButton, QTextBrowser, QVBoxLayout, 
-    QWidget, QLabel, QLineEdit, QRadioButton, QTextEdit, QScrollArea, QDialog
+    QWidget, QLabel, QLineEdit, QRadioButton, QPlainTextEdit, QScrollArea, QDialog
 )
 import threading
 from PyQt5.QtCore import pyqtSignal, QObject
@@ -163,6 +163,14 @@ class ConnectorApp(QtWidgets.QMainWindow):
 
         self.pushButton_start_stop = self.findChild(QPushButton, 'pushButton_start_stop')
         self.pushButton_start_stop.clicked.connect(self.toggle_button_text_start_stop)
+        self.pushButton_start_stop.setStyleSheet('''
+                QPushButton { 
+                    background-color: lightgreen;
+                } 
+                QPushButton:hover { 
+                    background-color: green;
+                }
+            ''')
 
         self.pushButton_update_max_log_msg = self.findChild(QPushButton, 'pushButton_update_max_log_msg')
         self.pushButton_update_max_log_msg.clicked.connect(self.pushed_pushButton_update_max_log_msg)
@@ -228,6 +236,61 @@ class ConnectorApp(QtWidgets.QMainWindow):
 
         self.textBrowser_canID_whitelist = self.findChild(QTextBrowser, 'textBrowser_canID_whitelist')
         self.textBrowser_canID_whitelist.setText("Here, whitelisted CAN-IDs will be listed.\nCurrently the whitelist is empty.\nInput CAN-ID as Integer from 0x000 to 0x7FF.")
+
+        # sending CAN message
+        self.plainTextEdit_target_ESP_IPv4_adress = self.findChild(QPlainTextEdit, 'plainTextEdit_target_ESP_IPv4_adress')
+        self.plainTextEdit_target_ESP_IPv4_adress.setPlainText('192.168.0.240')
+
+        self.plainTextEdit_target_can_id = self.findChild(QPlainTextEdit, 'plainTextEdit_target_can_id')
+        self.plainTextEdit_target_can_id.setPlainText('69')
+
+        self.plainTextEdit_hexadecimal_pair_0 = self.findChild(QPlainTextEdit, 'plainTextEdit_hexadecimal_pair_0')
+        self.plainTextEdit_hexadecimal_pair_0.setPlainText('00')
+        self.plainTextEdit_hexadecimal_pair_1 = self.findChild(QPlainTextEdit, 'plainTextEdit_hexadecimal_pair_1')
+        self.plainTextEdit_hexadecimal_pair_1.setPlainText('00')
+        self.plainTextEdit_hexadecimal_pair_2 = self.findChild(QPlainTextEdit, 'plainTextEdit_hexadecimal_pair_2')
+        self.plainTextEdit_hexadecimal_pair_2.setPlainText('00')
+        self.plainTextEdit_hexadecimal_pair_3 = self.findChild(QPlainTextEdit, 'plainTextEdit_hexadecimal_pair_3')
+        self.plainTextEdit_hexadecimal_pair_3.setPlainText('00')
+        self.plainTextEdit_hexadecimal_pair_4 = self.findChild(QPlainTextEdit, 'plainTextEdit_hexadecimal_pair_4')
+        self.plainTextEdit_hexadecimal_pair_4.setPlainText('00')
+        self.plainTextEdit_hexadecimal_pair_5 = self.findChild(QPlainTextEdit, 'plainTextEdit_hexadecimal_pair_5')
+        self.plainTextEdit_hexadecimal_pair_5.setPlainText('00')
+        self.plainTextEdit_hexadecimal_pair_6 = self.findChild(QPlainTextEdit, 'plainTextEdit_hexadecimal_pair_6')
+        self.plainTextEdit_hexadecimal_pair_6.setPlainText('00')
+        self.plainTextEdit_hexadecimal_pair_7 = self.findChild(QPlainTextEdit, 'plainTextEdit_hexadecimal_pair_7')
+        self.plainTextEdit_hexadecimal_pair_7.setPlainText('00')
+
+        self.pushButton_send_can_msg = self.findChild(QPushButton, 'pushButton_send_can_msg')
+        self.pushButton_send_can_msg.clicked.connect(self.pushed_pushButton_send_can_msg)
+        self.pushButton_send_can_msg.setStyleSheet('''
+                QPushButton { 
+                    background-color: lightgreen;
+                } 
+                QPushButton:hover { 
+                    background-color: green;
+                }
+            ''')
+    
+    #************************************************************************************
+    # Methods for sending single messages
+    def pushed_pushButton_send_can_msg(self):
+        self.my_connector.updated_target_IP(self.plainTextEdit_target_ESP_IPv4_adress.toPlainText())
+
+        hex_string_can_id = self.plainTextEdit_target_can_id.toPlainText()
+        int_value_can_id = int(hex_string_can_id, 16)
+
+        can_data_str = (self.plainTextEdit_hexadecimal_pair_0.toPlainText() + 
+                        self.plainTextEdit_hexadecimal_pair_1.toPlainText() + 
+                        self.plainTextEdit_hexadecimal_pair_2.toPlainText() + 
+                        self.plainTextEdit_hexadecimal_pair_3.toPlainText() + 
+                        self.plainTextEdit_hexadecimal_pair_4.toPlainText() + 
+                        self.plainTextEdit_hexadecimal_pair_5.toPlainText() + 
+                        self.plainTextEdit_hexadecimal_pair_6.toPlainText() + 
+                        self.plainTextEdit_hexadecimal_pair_7.toPlainText())
+        binary_can_data_str = convert_to_binary_string(can_data_str)
+        
+        self.my_connector.send_message(int_value_can_id, binary_can_data_str)
 
     #************************************************************************************
     # Methods for updating the Socket for recieving messages
