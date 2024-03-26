@@ -92,7 +92,7 @@ As depicted in the screenshot of the Connector application, the aforementioned f
 
 ![plot](Images/AdvancedSettings.png)
 
-For independent usage of the Connector application outside of a Python interpreter, it was compiled with PyInstaller into a ConnectorApp.exe for Windows. The .exe file is designed to support 1080p and 2k screen resolutions.
+For independent usage of the Connector application outside of a Python interpreter, it was compiled with PyInstaller into a ConnectorApp.exe for Windows. The .exe file is designed to support 1080p and 2k screen resolutions. A detailed guide for compiling an .exe-file with PyInstaller from a .py-PyQt5 file and .ui-PyQt5 file is provide under `dist/PyInstallerGuide`.
 
 #### Simulation
 
