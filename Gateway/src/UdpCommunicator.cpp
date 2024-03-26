@@ -1,4 +1,5 @@
 #include "UdpCommunicator.h"
+#include <algorithm>
 
 UdpCommunicator::UdpCommunicator(const IPAddress &remoteIp) : _remoteIp(remoteIp) {}
 
@@ -12,30 +13,65 @@ void UdpCommunicator::updateRemoteIp(const IPAddress &newRemoteIp)
   _remoteIp = newRemoteIp;
 }
 
-void UdpCommunicator::updateFilterId(uint32_t newFilterId) {
-    _filterId = newFilterId;
-    Serial.print("Filtering for CAN ID: 0x");
-    Serial.println(_filterId, HEX);
-}
-
-void UdpCommunicator::setFilterEnabled(bool enabled) {
-    _filterEnabled = enabled;
-    Serial.print("Filtering ");
-    Serial.println(enabled ? "enabled" : "disabled");
-}
-
-
-bool UdpCommunicator::shouldSendMessage(uint32_t id) {
-    // Wenn Filterung aktiv ist, prüfe die CAN-ID
-    if (_filterEnabled) {
-        return id == _filterId;
+void UdpCommunicator::addToWhitelist(uint32_t id) {
+    if (std::find(whitelist.begin(), whitelist.end(), id) == whitelist.end()) {
+        whitelist.push_back(id);
     }
-    return true; // Wenn keine Filterung aktiv ist, sende alle Nachrichten
+}
+
+void UdpCommunicator::addToBlacklist(uint32_t id) {
+    if (std::find(blacklist.begin(), blacklist.end(), id) == blacklist.end()) {
+        blacklist.push_back(id);
+    }
+}
+
+void UdpCommunicator::clearWhitelist() {
+  whitelist.clear(); // Lösche alle Einträge in der Whitelist
+}
+
+void UdpCommunicator::clearBlacklist() {
+  blacklist.clear(); // Lösche alle Einträge in der Blacklist
+}
+
+String UdpCommunicator::getWhitelistAsString() const {
+    String listHtml = "<ul>";
+    for (uint32_t id : whitelist) {
+        listHtml += "<li>" + String("0x") + String(id, HEX) + "</li>";
+    }
+    listHtml += "</ul>";
+    return listHtml;
+}
+
+String UdpCommunicator::getBlacklistAsString() const {
+    String listHtml = "<ul>";
+    for (uint32_t id : blacklist) {
+        listHtml += "<li>" + String("0x") + String(id, HEX) + "</li>";
+    }
+    listHtml += "</ul>";
+    return listHtml;
+}
+
+void UdpCommunicator::setAllowAll(bool allow) {
+    allowAll = allow;
+}
+
+bool UdpCommunicator::isAllowAllEnabled() const {
+    return allowAll;
+}
+
+bool UdpCommunicator::isAllowed(uint32_t id) {
+  if (allowAll) {
+    // Erlaube alle, außer die ID ist in der Blacklist
+    return std::find(blacklist.begin(), blacklist.end(), id) == blacklist.end();
+  } else {
+    // Blockiere alle, außer die ID ist in der Whitelist
+    return std::find(whitelist.begin(), whitelist.end(), id) != whitelist.end();
+  }
 }
 
 void UdpCommunicator::send(uint32_t id, const uint8_t *data, uint8_t length, bool extFlag, bool rtrFlag)
 {
-  if (!shouldSendMessage(id)) {
+  if (!isAllowed(id)) {
     return; // Nicht senden, wenn die ID gefiltert wird
   }
   uint8_t buffer[25];
