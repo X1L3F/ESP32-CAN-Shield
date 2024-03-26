@@ -84,7 +84,15 @@ Restart: Restarts the ESP32. It can take a moment to reconnet to the WIFI or you
 
 #### Connector
 
-The Connector is a python script with no external dependencies.
+The backend of the Connector application is a Python script with no external dependencies, besides the default Python 3.9 libraries. The programmed functions, classes, and their methods provide a comprehensive toolset to send, receive, and log CANeth messages. By default, the Connector is listening on all UDP IP channels for CANeth messages. Filters can be applied to restrict IPv4 addresses via a blacklist and whitelist. In addition to that, the CANeth messages can also be filtered by CAN ID via a blacklist and whitelist. The IPv4 address filter and the CAN ID filter are initially set to an empty blacklist, allowing all CANeth messages to be received. For ease of use, a graphical user interface (GUI) was implemented for the frontend of the Connector application using PyQt5. 
+
+![plot](Images/ConnectorApplication.png)
+
+As depicted in the screenshot of the Connector application, the aforementioned features can be accessed through the GUI. In the popup of the advanced settings window, the UDP IP and the UDP port of the socket can be adjusted.
+
+![plot](Images/AdvancedSettings.png)
+
+For independent usage of the Connector application outside of a Python interpreter, it was compiled with PyInstaller into a ConnectorApp.exe for Windows. The .exe file is designed to support 1080p and 2k screen resolutions.
 
 #### Simulation
 
@@ -102,5 +110,5 @@ To simulate a device that sends/receives CAN-messages to the Bus either CANoe or
    - Hotspot on ESP32: Connect your computer to the ESP32's hotspot. Use the ipconfig command in your computer's command prompt to find the IPv4 address of the ESP32. Type this address into your web browser to access the web server.
    - Conncetion to predefined WIFI: The IPv4 address will be displayed in the Arduino IDE's Serial Monitor. Enter this IPv4 address into your web browser to navigate to the web server.
 4. Configure the CAN Configurations on the [WebServer](https://github.com/X1L3F/ESP32-CAN-Shield?tab=readme-ov-file#webserver)
-5. Start `Connector/connector.py`, the UDP traffic can also be analyzed with Wireshark by filtering for `caneth`
+5. Start `Connector/qt_application_frontend.py` or the `dist/ConnectorApp.exe`, the UDP traffic can also be analyzed with Wireshark by filtering for `caneth`
 6. Start CANoe or `Tools/canDevice.py`
