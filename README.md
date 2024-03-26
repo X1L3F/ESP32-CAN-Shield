@@ -67,6 +67,20 @@ In the main.cpp of the gateway, the network setting can be modified via the mode
 int mode = 1;
 ...
 ```
+### Webserver
+On the Webserver there are several options to configure the communications and apply filter.
+
+CAN Configuration:
+- Remote IP: Enter the IP, where the messages should be send to. (Look up the IPv4-Adresse of your computer.)
+- CAN Bit Rate: Adjust the Bit Rate according to your settings
+
+Filter Option:
+- Allow all Messages: All messages are forwarded. You can add CAN-IDs to to the Blacklist to block messages from certain CAN-Devices.
+- Block all Messages: Blocks all messages. You can add CAN-IDs to to the Whitelist to forward messages from certain CAN-Devices.
+
+Restart: Restarts the ESP32. It can take a moment to reconnet to the WIFI or you have to connect to the Hotspot from the ESP32 again.
+
+![plot](Images/Webserver.png)
 
 #### Connector
 
