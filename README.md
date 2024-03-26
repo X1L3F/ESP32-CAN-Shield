@@ -114,7 +114,7 @@ To simulate a device that sends/receives CAN-messages to the Bus either CANoe or
 6. Start CANoe or `Tools/canDevice.py`
 
 
-## Addition resources for understanding CAN and programming CANeth
+## Additional resources for understanding CAN and programming CANeth
 - [A Simple intro to CAN](https://www.csselectronics.com/pages/can-bus-simple-intro-tutorial)
 - [ISO 11898](https://www.iso.org/standard/63648.html)
 - [Two Wire Automotive Interface](https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/api-reference/peripherals/twai.html)
