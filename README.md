@@ -67,7 +67,7 @@ In the main.cpp of the gateway, the network setting can be modified via the mode
 int mode = 1;
 ...
 ```
-### Webserver
+#### Webserver
 On the Webserver there are several options to configure the communications and apply filter.
 
 CAN Configuration:
