@@ -2,7 +2,7 @@
 
 ## Overview
 
-This ESP32-CAN-Shield is a custom-designed shield for the ESP32-S3, primarily used as a CAN (Controller Area Network) to Wi-Fi bridge. It enables seamless integration and communication between CAN network systems and Wi-Fi networks, making it ideal for automotive and industrial applications where remote monitoring and control are necessary.
+This ESP32-CAN-Shield is a custom-designed shield for the ESP32-S3, primarily used as a CAN (Controller Area Network) to WiFi bridge. It enables seamless integration and communication between CAN network systems and WiFi networks, making it ideal for automotive and industrial applications where remote monitoring and control are necessary.
 
 ![plot](Images/Overview_Hotspot.png)
 ![plot](Images/Overview_WIFI.png)
@@ -110,7 +110,7 @@ To simulate a device that sends/receives CAN-messages to the Bus either CANoe or
    - Hotspot on ESP32: Connect your computer to the ESP32's hotspot. Use the ipconfig command in your computer's command prompt to find the IPv4 address of the ESP32. Type this address into your web browser to access the web server.
    - Conncetion to predefined WIFI: The IPv4 address will be displayed in the Arduino IDE's Serial Monitor. Enter this IPv4 address into your web browser to navigate to the web server.
 4. Configure the CAN Configurations on the [WebServer](https://github.com/X1L3F/ESP32-CAN-Shield?tab=readme-ov-file#webserver)
-5. Start `Connector/qt_application_frontend.py` or the `dist/ConnectorApp.exe`, the UDP traffic can also be analyzed with Wireshark by filtering for `caneth`
+5. Start `Connector/qt_application_frontend.py` or the `dist/ConnectorApp.exe`, the UDP traffic can also be analyzed with Wireshark by filtering for `CANeth`
 6. Start CANoe or `Tools/canDevice.py`
 
 
