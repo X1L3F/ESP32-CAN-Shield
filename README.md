@@ -112,3 +112,9 @@ To simulate a device that sends/receives CAN-messages to the Bus either CANoe or
 4. Configure the CAN Configurations on the [WebServer](https://github.com/X1L3F/ESP32-CAN-Shield?tab=readme-ov-file#webserver)
 5. Start `Connector/qt_application_frontend.py` or the `dist/ConnectorApp.exe`, the UDP traffic can also be analyzed with Wireshark by filtering for `caneth`
 6. Start CANoe or `Tools/canDevice.py`
+
+
+### Addition resources for understanding CAN and programming CANeth
+- [A Simple intor to CAN](https://www.csselectronics.com/pages/can-bus-simple-intro-tutorial)
+- [Two Wire Automotive Interface](https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/api-reference/peripherals/twai.html)
+- [ISO 11898](https://www.iso.org/standard/63648.html)
