@@ -96,8 +96,12 @@ To simulate a device that sends/receives CAN-messages to the Bus either CANoe or
 
 ### Usage
 
-1. Attach CAN-Shield to ESP32 connect it to PC with the right USB-port and flash the Gateway-software
-2. Plug in IDC and connect to VN1610. Connect VN1610 to PC.
-3. Go to the settings website of the ESP by entering it's ip in a browser. And configure CAN-speed and IP of the Connector host.
-4. Start `Connector/connector.py`, the UDP traffic can also be analyzed with Wireshark by filtering for `caneth`
-5. Start CANoe or `Tools/canDevice.py`
+1. Attach CAN-Shield to ESP32 connect it to PC with the right USB-port and flash the Gateway-software. Before flashing, ensure you have included the Secret.h file in your project. Select your desired network mode in the software settings.
+2. Access the web server using its IPv4-address. The method to retrieve this address depends on your network connection mode:
+   - Hotspot on ESP32: Connect your computer to the ESP32's hotspot. Use the ipconfig command in your computer's command prompt to find the IPv4 address of the ESP32. Type this address into your web browser to access the web server.
+   - Conncetion to predefined WIFI: The IPv4 address will be displayed in the Arduino IDE's Serial Monitor. Enter this IPv4 address into your web browser to navigate to the web server.
+3. Configure the CAN Configurations on the WebServer.
+4. Plug in IDC and connect to VN1610. Connect VN1610 to PC.
+5. Go to the settings website of the ESP by entering it's ip in a browser. And configure CAN-speed and IP of the Connector host.
+6. Start `Connector/connector.py`, the UDP traffic can also be analyzed with Wireshark by filtering for `caneth`
+7. Start CANoe or `Tools/canDevice.py`
