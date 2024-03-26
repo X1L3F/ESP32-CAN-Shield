@@ -155,7 +155,7 @@ class ConnectorApp(QtWidgets.QMainWindow):
         self.pushButton_start_recording.clicked.connect(self.pushed_pushButton_start_recording)
 
         self.lineEdit_max_log_msg = self.findChild(QLineEdit, 'lineEdit_max_log_msg')
-        self.lineEdit_max_log_msg.setText("Number of mesages")
+        self.lineEdit_max_log_msg.setText("Number of messages")
 
         # init update Socket
         self.pushButton_Advanced_Settings = self.findChild(QPushButton, 'pushButton_Advanced_Settings')
