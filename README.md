@@ -85,9 +85,13 @@ Restart: Restarts the ESP32. It can take a moment to reconnet to the WIFI or you
 #### Connector
 
 The backend of the Connector application is a Python script with no external dependencies, besides the default Python 3.9 libraries. The programmed functions, classes, and their methods provide a comprehensive toolset to send, receive, and log CANeth messages. By default, the Connector is listening on all UDP IP channels for CANeth messages. Filters can be applied to restrict IPv4 addresses via a blacklist and whitelist. In addition to that, the CANeth messages can also be filtered by CAN ID via a blacklist and whitelist. The IPv4 address filter and the CAN ID filter are initially set to an empty blacklist, allowing all CANeth messages to be received. For ease of use, a graphical user interface (GUI) was implemented for the frontend of the Connector application using PyQt5. 
+
 ![plot](Images/ConnectorApplication.png)
+
 As depicted in the screenshot of the Connector application, the aforementioned features can be accessed through the GUI. In the popup of the advanced settings window, the UDP IP and the UDP port of the socket can be adjusted.
+
 ![plot](Images/AdvancedSettings.png)
+
 For independent usage of the Connector application outside of a Python interpreter, it was compiled with PyInstaller into a ConnectorApplication.exe for Windows. The .exe file is designed to support 1080p and 2k screen resolutions.
 
 #### Simulation
