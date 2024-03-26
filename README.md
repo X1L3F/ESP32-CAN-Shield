@@ -96,7 +96,7 @@ To simulate a device that sends/receives CAN-messages to the Bus either CANoe or
 
 ### Usage
 
-1. Attach CAN-Shield to ESP32 connect it to PC with the right USB-port and flash the Gateway-software. Before flashing, ensure you have included the [Secret.h](https://github.com/X1L3F/ESP32-CAN-Shield?tab=readme-ov-file#gateway) file in your project. Select your desired network mode in the software settings.
+1. Attach CAN-Shield to ESP32 connect it to PC with the right USB-port and flash the Gateway-software. Before flashing, ensure you have included the [Secret.h](https://github.com/X1L3F/ESP32-CAN-Shield?tab=readme-ov-file#gateway) file in your project. Select your desired network mode in the main.cpp.
 2. Plug in IDC and connect to VN1610. Connect VN1610 to PC.
 3. Access the web server using the IPv4-address of the ESP32. The method to retrieve this address depends on your network connection mode:
    - Hotspot on ESP32: Connect your computer to the ESP32's hotspot. Use the ipconfig command in your computer's command prompt to find the IPv4 address of the ESP32. Type this address into your web browser to access the web server.
