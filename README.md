@@ -4,7 +4,8 @@
 
 This ESP32-CAN-Shield is a custom-designed shield for the ESP32-S3, primarily used as a CAN (Controller Area Network) to Wi-Fi bridge. It enables seamless integration and communication between CAN network systems and Wi-Fi networks, making it ideal for automotive and industrial applications where remote monitoring and control are necessary.
 
-![plot](overview.png)
+![plot](Overview_Hotspot.png)
+![plot](Overview_WIFI.png)
 
 ## Compatibility
 
