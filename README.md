@@ -98,7 +98,7 @@ As depicted in the screenshot of the Connector application, the aforementioned f
 
 ![plot](Images/AdvancedSettings.png)
 
-For independent usage of the Connector application outside of a Python interpreter, it was compiled with PyInstaller into a ConnectorApp.exe for Windows. The .exe file is designed to support 1080p and 2k screen resolutions. A detailed guide for compiling an .exe-file with PyInstaller from a .py-PyQt5 file and .ui-PyQt5 file is provide under `dist/PyInstallerGuide`.
+For independent usage of the Connector application outside of a Python interpreter, it was compiled with [PyInstaller](https://pypi.org/project/pyinstaller/) into a ConnectorApp.exe for [Windows 23H2](https://support.microsoft.com/de-de/topic/updateverlauf-von-windows-11-version-23h2-59875222-b990-4bd9-932f-91a5954de434). The .exe file is designed to support 1080p and 2k screen resolutions. A detailed guide for compiling an .exe-file with PyInstaller from a .py-PyQt5 file and .ui-PyQt5 file is provide under `dist/PyInstallerGuide`.
 
 #### Simulation
 
@@ -106,7 +106,7 @@ To simulate a device that sends/receives CAN-messages to the Bus either CANoe or
 
 - install the `pip install python-can` package
 - install the [latest drivers](https://www.vector.com/int/en/support-downloads/download-center/#product=%5B%2256540%22%5D&downloadType=%5B%22drivers%22%5D&tab=1&pageSize=30&sort=date&order=desc) for the Vector hardware Interface
-- install the [XL Driver Library](https://www.vector.com/int/en/support-downloads/download-center/#product=%5B%22175%22%5D&downloadType=%5B%22drivers%22%5D&tab=1&pageSize=15&sort=date&order=desc) and copy the `vxlapi64.dll` into the working directory (If the driver doesn't show up, you have to manually add the vxlapi64.dll path to XL Driver Library)
+- install the [XL Driver Library](https://www.vector.com/int/en/support-downloads/download-center/#product=%5B%22175%22%5D&downloadType=%5B%22drivers%22%5D&tab=1&pageSize=15&sort=date&order=desc) and copy the `vxlapi64.dll` into the working directory (If the driver doesn't show up, you have to manually add the vxlapi64.dll file path to XL Driver Library)
 
 ### Usage
 
