@@ -13,6 +13,8 @@ One ESP32-CAN Shield is linked to a CAN device, such as an OBD2 unit in an autom
 Multiple ESP32-CAN Shields are each linked to their respective CAN devices, while all ESP32 devices are connected to an established WiFi network. The Connector actively monitors all CANeth messages transmitted over the WiFi network and directed towards it. This use case is also used for development and testing.
 ![plot](Images/Overview_WIFI.png)
 
+[![Video Introduction to 'Multi-Device CAN-Wifi Network](https://img.youtube.com/vi/aGkZIFaZris/maxresdefault.jpg)](https://youtu.be/aGkZIFaZris)
+
 ## Compatibility
 
 **Note:** ESP32 development boards come in various widths. Ensure to adjust the header width of this shield to match your specific ESP32 board model.
