@@ -13,8 +13,6 @@ One ESP32-CAN Shield is linked to a CAN device, such as an OBD2 unit in an autom
 Multiple ESP32-CAN Shields are each linked to their respective CAN devices, while all ESP32 devices are connected to an established WiFi network. The Connector actively monitors all CANeth messages transmitted over the WiFi network and directed towards it. This use case is also used for development and testing.
 ![plot](Images/Overview_WIFI.png)
 
-[![Video Introduction to 'Multi-Device CAN-Wifi Network](https://img.youtube.com/vi/aGkZIFaZris/maxresdefault.jpg)](https://youtu.be/aGkZIFaZris)
-
 ## Compatibility
 
 **Note:** ESP32 development boards come in various widths. Ensure to adjust the header width of this shield to match your specific ESP32 board model.
@@ -120,6 +118,14 @@ To simulate a device that sends/receives CAN-messages to the Bus either CANoe or
 4. Configure the CAN Configurations on the [WebServer](https://github.com/X1L3F/ESP32-CAN-Shield?tab=readme-ov-file#webserver)
 5. Start `Connector/qt_application_frontend.py` or the `dist/ConnectorApp.exe`, the UDP traffic can also be analyzed with Wireshark by filtering for `CANeth`
 6. Start CANoe or `Tools/canDevice.py`
+
+In the linked YouTube video a quick, visual introduction for the [Multi-Device CAN-WiFi Network](https://youtu.be/aGkZIFaZris) use case and how to use the Connector application is provided. The video summarizes the aforementioned steps for practical work with the code.
+
+<div align="center">
+  <a href="https://youtu.be/aGkZIFaZris">
+    <img src="https://img.youtube.com/vi/aGkZIFaZris/0.jpg" alt="Vorschau des Videos">
+  </a>
+</div>
 
 
 ## Additional resources for understanding CAN and programming CANeth
